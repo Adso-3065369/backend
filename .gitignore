@@ -1,0 +1,4 @@
+/node_modules
+.continue
+.env
+.env.test
