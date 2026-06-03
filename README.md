@@ -1,8 +1,42 @@
-# Sistema de Inventario ADSO - Arquitectura Profesional
+# Sistema de Inventario ADSO | Enterprise Core API
+### "Simulación de Ciclo de Vida de Software Corporativo (SDLC)"
 
-¡Felicidades, aprendiz! Has dejado atrás los prototipos simples para entrar en el desarrollo de *Software de Clase Mundial*. Este proyecto es una API robusta construida con *Node.js, ES Modules* y una arquitectura de persistencia real en *MySQL*.
+---
 
-Ya no guardamos datos en la memoria volátil; ahora construimos sistemas con *integridad referencial, seguridad por roles (RBAC) y validaciones estrictas*.
+## Visión del Proyecto
+Bienvenido al entorno de desarrollo profesional. Este no es un repositorio académico; es una **simulación de entorno productivo**. Aquí, el código no solo debe "funcionar", debe ser **escalable, auditable y resiliente**. 
+
+Hemos estructurado este sistema para replicar las exigencias de la industria de software de clase mundial: **Integridad de Datos, Seguridad bajo principios Zero-Trust y Arquitectura de Software Desacoplada.**
+
+
+
+## Metodología de Trabajo (Ecosistema Profesional)
+Tu rol en este proyecto no es el de un estudiante, sino el de un **Software Developer** en un equipo de desarrollo ágil. Bajo esta premisa, el cumplimiento de los estándares no es opcional:
+
+* **Arquitectura de Capas (N-Tier):** Implementamos una separación estricta de responsabilidades. Si la lógica de negocio toca la base de datos o si el controlador conoce la estructura de las tablas, el código será rechazado.
+* **Gatekeeping y Quality Assurance:** El código pasa por un proceso de revisión técnico. Las pruebas de integración (`Jest + Supertest`) no son una sugerencia, son el requisito de aceptación para cualquier *Pull Request*.
+* **Gestión Basada en RFCs:** No se implementa funcionalidad sin una Solicitud de Cambio (RFC) documentada y aprobada. Aquí trabajamos bajo **"Diseño antes de Código"**.
+* **Seguridad por Diseño:** Implementamos control de acceso basado en roles (RBAC) desde la capa de middleware, asegurando que el sistema sea auditable y seguro desde la raíz.
+
+
+## El Estándar Industrial
+Al finalizar este proyecto, no habrás construido "una aplicación"; habrás interiorizado un flujo de trabajo que define tu perfil profesional:
+
+> *"El código profesional es aquel que puede ser mantenido, probado y auditado por alguien que no seas tú. Si no puedes explicar por qué tu lógica de negocio está desacoplada de tu capa de persistencia, tu arquitectura aún no está lista para producción."*
+
+---
+
+## Compromisos de Desarrollo
+ - A. **Disciplina:** Seguimiento estricto del estándar de *Conventional Commits*.
+ - B. **Rigor:** Calidad sobre cantidad. Un `test` fallido bloquea el despliegue.
+ - C. **Profesionalismo:** Documentación técnica precisa, Bitácoras de inspección completas y transparencia en el control de versiones.
+
+---
+
+### ¿Estás listo para el despliegue?
+En una empresa real, si subes un código que rompe el *build* de producción, hay una interrupción de negocio que afecta a la organización. Aquí, tratamos el código con el mismo nivel de respeto y seriedad.
+
+**Instructor:** John Becerra | **Programa:** ADSO - SENA
 
 ---
 ## 1. Instalación y Puesta en Marcha
