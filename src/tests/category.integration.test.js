@@ -1,30 +1,30 @@
 /**
  * @file category.integration.test.js
  * @description Suite de Pruebas de Integración - Módulo de Categorías (CRUD Completo)
- * * OBJETIVO: Validar la integridad del ciclo de vida de la entidad Categoría, 
+ * OBJETIVO: Validar la integridad del ciclo de vida de la entidad Categoría, 
  * desde la persistencia en base de datos hasta la exposición vía API REST,
  * asegurando que el control de acceso (RBAC) y la integridad de datos sean correctos.
- * @author Instructor (John Becerra) - SENA Centro de Comercio y Servicios - Tecnología en Análisis y Desarrollo de Sistemas de Información
- * @version 1.0.0
+ * @author Instructor (John Becerra)
+ * @version 1.1.0
  * @license MIT
- * @see https://jestjs.io/ - Documentación oficial de Jest
- * @see https://www.npmjs.com/package/supertest - Documentación oficial de Supertest
  */
 
-import dotenv from 'dotenv';
-// CRÍTICO: Carga de variables de entorno ANTES de importar la aplicación.
-// Si app.js se carga antes, se conectará a la BD de producción.
-dotenv.config({ path: '.env.test' });
-
+// ============================================================================
+// 1. IMPORTACIONES ESTÁTICAS CORE
+// ============================================================================
+// La dependencia 'dotenv' ha sido eliminada. El entorno (.env.test) es inyectado
+// externamente vía CLI mediante cross-env y Jest.
 import request from 'supertest';
 import app from '../app.js';
 import pool from '../config/db.js';
 import { UserModel } from '../models/user.model.js';
 import { CategoryModel } from '../models/category.model.js';
 
-// IDEMPOTENCIA: Generación de datos únicos mediante timestamps.
-// Esto garantiza que la prueba sea ejecutable infinitas veces sin errores 
-// de "Unique Constraint" (nombre duplicado) en MySQL.
+// ============================================================================
+// 2. PREPARACIÓN DE ESTADO AISLADO
+// ============================================================================
+// IDEMPOTENCIA: Generación de datos únicos mediante timestamps para evitar 
+// colisiones de Unique Constraint en ejecuciones consecutivas.
 const testUser = {
     name: 'SENA Inspector CRUD',
     email: `inspector_${Date.now()}@saas.com`,
@@ -36,31 +36,30 @@ const testCategory = {
     description: 'Descripción de prueba'
 };
 
-// ESTADO GLOBAL: variables necesarias para encadenar las pruebas (State Management)
+// ESTADO GLOBAL: variables necesarias para encadenar las pruebas.
 let accessToken = '';
 let createdCategoryId = null;
 
+// ============================================================================
+// 3. SUITE DE PRUEBAS
+// ============================================================================
 describe('Suite de Integración: CRUD de Categorías', () => {
 
-    // ========================================================================
-    // SETUP: Preparación del Entorno
-    // ========================================================================
+    // FASE: SETUP
     beforeAll(async () => {
-        // 1. Registro inicial vía API: Actuamos como un cliente externo.
+        // 1. Registro inicial vía API.
         await request(app).post('/api/auth/register').send(testUser);
 
-        // 2. Recuperar ID: Consultamos la BD directamente para saber qué ID asignó MySQL.
+        // 2. Recuperar ID insertado.
         const user = await UserModel.findByEmail(testUser.email);
 
         // 3. BYPASS DE SEGURIDAD (Elevación de Privilegios):
-        // Para probar rutas protegidas, necesitamos permisos. En pruebas de integración, 
-        // inyectamos el rol directamente en la BD (Seed) en lugar de intentar 
-        // autenticarnos como admin (lo cual causaría una dependencia circular).
+        // Inyectamos el rol directamente en la BD para evitar dependencias circulares.
         if (user) {
             await pool.query("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [user.id, 1]);
         }
 
-        // 4. Autenticación: Obtenemos el token. Este token ya lleva los permisos embebidos.
+        // 4. Autenticación y extracción de token con permisos embebidos.
         const loginRes = await request(app).post('/api/auth/login').send({
             email: testUser.email,
             password: testUser.password
@@ -68,43 +67,37 @@ describe('Suite de Integración: CRUD de Categorías', () => {
         accessToken = loginRes.body.data.accessToken;
     });
 
-    // ========================================================================
-    // TEARDOWN: Limpieza (Recolección de Basura)
-    // ========================================================================
+    // FASE: TEARDOWN
     afterAll(async () => {
         // 1. Limpieza de Entidad: Borrado físico del recurso creado en el test.
         if (createdCategoryId) {
             await CategoryModel.delete(createdCategoryId);
         }
 
-        // 2. Limpieza de Dependencias: Eliminamos usuario y sus relaciones (Foreign Keys).
+        // 2. Limpieza de Dependencias: Eliminamos usuario y sus relaciones.
         const user = await UserModel.findByEmail(testUser.email);
         if (user) {
             await pool.query("DELETE FROM user_roles WHERE user_id = ?", [user.id]);
             await UserModel.delete(user.id);
         }
         
-        // 3. Finalización: Liberar conexiones para evitar procesos colgados (Open Handles).
+        // 3. Finalización: Prevención de Open Handles.
         if (pool && typeof pool.end === 'function') {
             await pool.end();
         }
     });
 
-    // ========================================================================
-    // TEST CASES (Caja Blanca: API + Base de Datos)
-    // ========================================================================
-
+    // FASE: EJECUCIÓN (Test Cases - Caja Blanca)
     test('1. [POST] Debe crear una nueva categoría con rol autorizado', async () => {
         const res = await request(app)
             .post('/api/categories')
             .set('Authorization', `Bearer ${accessToken}`)
             .send(testCategory);
 
-        // Aserción API: Status Code 201 (Created)
         expect(res.statusCode).toBe(201);
         createdCategoryId = res.body.data.id;
 
-        // Aserción DB: Verificamos escritura real en disco (Caja Blanca)
+        // Aserción DB: Verificación de escritura real.
         const dbVerification = await CategoryModel.findById(createdCategoryId);
         expect(dbVerification.name).toBe(testCategory.name);
     });
@@ -128,7 +121,7 @@ describe('Suite de Integración: CRUD de Categorías', () => {
 
         expect(res.statusCode).toBe(200);
         
-        // Verificación de integridad: Comparamos el estado actual vs el esperado
+        // Verificación de integridad estructural.
         const dbVerification = await CategoryModel.findById(createdCategoryId);
         expect(dbVerification.description).toBe('Actualizada');
     });
@@ -140,10 +133,10 @@ describe('Suite de Integración: CRUD de Categorías', () => {
 
         expect(res.statusCode).toBe(200);
 
-        // Verificación de destrucción: El registro ya no debe existir (Undefined)
+        // Verificación de destrucción en BD.
         const dbVerification = await CategoryModel.findById(createdCategoryId);
         expect(dbVerification).toBeUndefined();
         
-        createdCategoryId = null; // Reinicio de estado para evitar errores en post-test
+        createdCategoryId = null; // Reinicio de estado.
     });
 });

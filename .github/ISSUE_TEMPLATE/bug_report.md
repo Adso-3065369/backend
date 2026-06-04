@@ -1,31 +1,45 @@
 ---
-name: "Reporte de Error (Bug)"
-about: Utiliza esta plantilla para informar un fallo técnico. Incluye ejemplos para guiarte.
-title: "bug: [Escribe un resumen corto del error]"
-labels: bug
+name: "Reporte de Bug (Backend/API)"
+about: Documenta un fallo en el servidor, base de datos o lógica de la API con evidencia técnica.
+title: "fix: [Descripción corta del error en el endpoint]"
+labels: bug, backend
 assignees: ''
 ---
 
-## Descripción del Error
-**Ejemplo:** *El servidor se cierra inesperadamente al intentar conectar a la base de datos cuando falta una variable de entorno.*
+> **ADVERTENCIA TÉCNICA:** Un error de backend reportado sin el cURL exacto de reproducción, el payload enviado y el stack trace del servidor será cerrado. No se aceptan descripciones vagas. Borra los textos de ejemplo antes de enviar.
 
-## Pasos para Reproducir
-**Ejemplo:**
-1. Abrir el archivo `.env` y borrar la línea `DB_PASSWORD`.
-2. Ejecutar el comando `npm start` en la terminal.
-3. Intentar realizar una petición al endpoint `/api/users`.
-4. Ver el error `Access denied for user...` en la consola.
+## 1. Contexto de Ejecución (Entorno del Servidor)
+* **Entorno:** *Ejemplo: Local / Staging / Producción*
+* **Versión de Node.js / PHP:** *Ejemplo: Node v20.10.0 / PHP 8.2*
+* **Versión de Base de Datos:** *Ejemplo: MySQL 8.0*
+* **Cliente API:** *Ejemplo: Postman v10 / ThunderClient / cURL*
 
-## Comportamiento Esperado vs. Actual
-- **Lo que debería pasar:** *El sistema debería mostrar un mensaje de error controlado o usar un valor por defecto.*
-- **Lo que pasa actualmente:** *La aplicación se detiene (crash) y el proceso de Node.js se cierra por completo.*
+## 2. Flujo de Reproducción (Contrato HTTP)
+*Detalla exactamente cómo invocar el error. Incluye los datos exactos que enviaste.*
 
-## Entorno de Desarrollo
-**Ejemplo:**
-- **Sistema Operativo:** Windows 11 / Linux Ubuntu 22.04.
-- **Versión de Node.js:** v20.11.0.
-- **Base de Datos:** MySQL 8.0.
+**Petición Exacta:**
+* **Método y Endpoint:** `POST /api/v1/usuarios`
+* **Headers requeridos:** `Authorization: Bearer <token_valido>`
+* **Payload (Body) enviado:**
+```json
+{
+  "nombre": "Juan",
+  "email": "juan@correo",
+  "rol_id": 2
+}
+```
+## 3. Contraste de Expectativas
 
-## Evidencia (Opcional)
----
-> *Recuerda: Un bug bien reportado ahorra horas de frustración al equipo.*
+**Comportamiento Actual (El Error):**
+* *Ejemplo: El validador (Zod/Request) no detecta el formato de email inválido, el controlador pasa el dato al servicio y la base de datos colapsa arrojando un error 500 por restricción de clave única o formato.*
+
+**Comportamiento Esperado (El Contrato Lógico):**
+* *Ejemplo: El middleware de validación debería interceptar el formato de email erróneo y retornar un HTTP `422 Unprocessable Entity` con el detalle del campo fallido, sin tocar el controlador.*
+
+## 4. Evidencia Técnica Estricta
+*Adjunta los logs crudos. No recortes información.*
+
+- [ ] **Stack Trace del Servidor (Log de la terminal):** ```text
+TypeError: Cannot read properties of undefined (reading 'id') at UserService.createUser (src/services/UserService.js:42)```
+- [ ] **Respuesta HTTP recibida (Raw Response):** *Ejemplo: `500 Internal Server Error` - `{"success": false, "message": "Error interno"}`*
+- [ ] **Estado de la Base de Datos (Si aplica):** *Ejemplo: El registro se insertó parcialmente creando datos huérfanos.*
