@@ -32,21 +32,22 @@ export const RoleService = {
   },
 
   getRoleByIdWithPermissions: async (id) => {
-    // 1. Ejecutamos ambas consultas en paralelo
-    const [role, permissions] = await Promise.all([
-      RoleModel.findById(id),
-      PermissionModel.findByRoleId(id)
-    ]);
+    // 1. Consulta principal al recurso padre
+    const role = await RoleModel.findById(id);
 
-    // 2. Validación temprana: Si el rol no existe, detenemos el proceso
+    // 2. Verdadera validación temprana (Fail-Fast). 
+    // Corta la ejecución antes de hacer otra consulta inútil.
     if (!role) {
       return null;
     }
 
-    // 3. Ensamblamos la respuesta en un solo objeto
+    // 3. Consulta dependiente (solo consume recursos si el rol existe)
+    const permissions = await PermissionModel.findByRoleId(id);
+
+    // 4. Ensamblaje
     return {
       ...role,
-      permissions: permissions
+      permissions
     };
   },
 
