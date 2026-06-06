@@ -177,10 +177,11 @@ export const SaleModel = {
     },
 
     /**
-     * @description Determina las áreas de mayor volumen de salida calculando el top 5 de categorías basándose en las unidades transadas.
-     * @returns {Promise<Array<Object>>} Arreglo descendente que asocia 'category_name' con el volumen 'sales_count'.
+     * @description Determina las áreas de mayor volumen de salida calculando el top de categorías.
+     * @param {number} [limit=5] - Cantidad máxima de categorías a retornar.
+     * @returns {Promise<Array<Object>>} Arreglo descendente (category_name, sales_count).
      */
-    getTopCategories: async () => {
+    getTopCategories: async (limit = 5) => {
         const query = `
             SELECT c.name as category_name, SUM(sd.quantity) as sales_count 
             FROM sale_details sd
@@ -188,9 +189,10 @@ export const SaleModel = {
             JOIN categories c ON p.category_id = c.id
             GROUP BY c.id, c.name
             ORDER BY sales_count DESC
-            LIMIT 5
+            LIMIT ?
         `;
-        const [rows] = await pool.query(query);
+        // Inyecta el límite dinámicamente evitando inyección SQL
+        const [rows] = await pool.query(query, [Number(limit)]);
         return rows;
     }
 };

@@ -66,10 +66,24 @@ export const SaleController = {
      */
     create: catchAsync(async (req, res) => {
         const { client_id, details } = req.body;
-        const user_id = req.user.id; // Extraído del token JWT validado
 
+        // 1. VALIDACIÓN PREVENTIVA (Fail-Fast)
+        if (!client_id) {
+            const err = new Error("El cliente es obligatorio para procesar la venta.");
+            err.statusCode = 422;
+            throw err;
+        }
+
+        if (!details || !Array.isArray(details) || details.length === 0) {
+            const err = new Error("La venta debe contener al menos un producto.");
+            err.statusCode = 422;
+            throw err;
+        }
+
+        // 2. EJECUCIÓN (Solo si la validación pasa)
+        const user_id = req.user.id;
         const newSale = await SaleService.processSale(client_id, user_id, details);
-
+        
         return successResponse(res, 201, "Transacción de venta registrada exitosamente.", newSale);
     })
 };
