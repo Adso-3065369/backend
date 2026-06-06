@@ -1,7 +1,8 @@
 import { Router } from "express";
-import { verifyToken, checkPermission, validateSchema } from "../middlewares/index.js";
+import { verifyToken, checkPermission, validateSchema, authorizePolicy } from "../middlewares/index.js";
 import { UserController } from "../controllers/user.controller.js";
 import { assignRolesSchema } from "../schemas/user.schema.js";
+import { UserPolicy } from "../policies/user.policy.js";
 
 /**
  * @file user.routes.js
@@ -55,7 +56,8 @@ userRouter.put("/:id",
  * @description Elimina lógicamente o físicamente a un usuario.
  */
 userRouter.delete("/:id",
-  checkPermission("users.delete"),
+  authorizePolicy(UserPolicy, "delete"),
+  // checkPermission("users.delete"), // Si se prefiere usar permisos en lugar de políticas
   UserController.delete
 );
 
