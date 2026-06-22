@@ -19,7 +19,7 @@ Ejecute el siguiente bloque de comandos en su gestor de base de datos preferido:
 ### 1. Creación del Esquema
 Se crea el contenedor lógico para las tablas del sistema si aún no existe.
 ```sql
-CREATE DATABASE IF NOT EXISTS inventario_adso;
+CREATE DATABASE IF NOT EXISTS inventario_adso CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
 ### 2. Gestión de Seguridad (Usuario Dedicado)
