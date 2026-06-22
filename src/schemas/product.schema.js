@@ -42,5 +42,11 @@ export const productSchema = z
       })
       .int("El stock debe ser un número entero (sin decimales)")
       .nonnegative("El stock no puede ser negativo"),
+
+      isActive: z
+        .boolean({
+            invalid_type_error: "El campo isActive debe ser un valor booleano (true o false)",
+        })
+        .optional(),
   })
   .strict("No envíes campos adicionales que no pertenecen al producto");
