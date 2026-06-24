@@ -164,14 +164,14 @@ export const ProductModel = {
 
     const [result] = await pool.query(query, params);
     return result.affectedRows > 0 ? await ProductModel.findById(id) : null;
-}
+},
 
   /**
    * @description Ejecuta una eliminación permanente de un producto por ID.
    * @param {number} id - Identificador del producto.
    * @returns {Promise<boolean>} True si la eliminación fue exitosa, false de lo contrario.
    */
-  delete: async (id) => {
+    delete: async (id) => {
     const [result] = await pool.query("DELETE FROM products WHERE id = ?", [id]);
     return result.affectedRows > 0;
   },
