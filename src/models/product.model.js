@@ -167,6 +167,21 @@ export const ProductModel = {
     return updatedProduct[0];
   },
 
+  ///////////////////
+  toggleStatus: async (id, isActive) => {
+    const [result] = await pool.query(
+        "UPDATE products SET is_active = ? WHERE id = ?",
+        [isActive ? 1 : 0, id]
+    );
+
+    if (result.affectedRows === 0) return null;
+
+    const [updatedProduct] = await pool.query(
+        "SELECT * FROM products WHERE id = ?", [id]
+    );
+    return updatedProduct[0];
+},
+
   /**
    * @description Ejecuta una eliminación permanente de un producto por ID.
    * @param {number} id - Identificador del producto.
