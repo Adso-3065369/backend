@@ -147,25 +147,24 @@ export const ProductModel = {
    */
   update: async (id, updatedFields) => {
     const { code, name, category_id, price, stock } = updatedFields;
+    
+    // Traducción: JS (isActive) -> SQL (is_active)
     const isActiveField = updatedFields.isActive !== undefined ? updatedFields.isActive : updatedFields.is_active;
     
     let query = "UPDATE products SET code = ?, name = ?, category_id = ?, price = ?, stock = ?";
     const params = [code, name, category_id, price, stock];
 
     if (isActiveField !== undefined) {
-        query += ", is_active = ?";
+        query += ", is_active = ?"; 
         params.push(isActiveField ? 1 : 0);
     }
+    
     query += " WHERE id = ?";
     params.push(id);
 
     const [result] = await pool.query(query, params);
-    
-    if (result.affectedRows === 0) return null;
-    
-    const [updatedProduct] = await pool.query("SELECT * FROM products WHERE id = ?", [id]);
-    return updatedProduct[0];
-  },
+    return result.affectedRows > 0 ? await ProductModel.findById(id) : null;
+}
 
   /**
    * @description Ejecuta una eliminación permanente de un producto por ID.
