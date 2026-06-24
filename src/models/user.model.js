@@ -18,36 +18,38 @@ export const UserModel = {
    * @param {Object} [filters={}] - Parámetros de consulta dinámica.
    * @returns {Promise<number>}
    */
-  // Realiza el conteo absoluto de la entidad evaluando restricciones de búsqueda
+  // Cuenta la cantidad de usuarios aplicando los filtros provistos
   countDynamic: async (filters = {}) => {
-      // Definimos la consulta base para contar el total de usuarios
+      // Definimos la consulta base inicial para contar los registros de la tabla users
       let query = `SELECT COUNT(id) as total FROM users WHERE 1=1`;
-      // Declaramos un arreglo vacío para almacenar los parámetros de la consulta SQL parametrizada
+      // Inicializamos un arreglo para guardar los parámetros que se inyectarán de forma segura en la consulta SQL
       const params = [];
 
-      // Si se proporciona un término de búsqueda, agregamos la condición LIKE a la consulta
+      // Si existe un término de búsqueda para nombre o correo electrónico
       if (filters.search) {
+          // Añadimos la cláusula LIKE para buscar coincidencias parciales de forma segura
           query += ` AND (name LIKE ? OR email LIKE ?)`;
-          // Creamos el término con comodines para buscar en nombre o correo
+          // Formateamos el término envolviéndolo en porcentajes para la coincidencia de subcadena
           const likeTerm = `%${filters.search}%`;
-          // Insertamos el término dos veces (uno para name y otro para email) en el arreglo de parámetros
+          // Agregamos dos veces el parámetro (uno para name y otro para email)
           params.push(likeTerm, likeTerm);
       }
 
-      // Si se proporciona un filtro por rol, agregamos una subconsulta EXISTS para verificar que el usuario tenga ese rol
+      // Si existe un filtro por rol
       if (filters.role) {
+          // Agregamos una subconsulta con EXISTS para validar de forma eficiente si el usuario posee dicho rol asignado
           query += ` AND EXISTS (
               SELECT 1 FROM user_roles ur2 
               INNER JOIN roles r2 ON ur2.role_id = r2.id 
               WHERE ur2.user_id = users.id AND r2.name = ?
           )`;
-          // Añadimos el nombre del rol a los parámetros de la consulta
+          // Agregamos el nombre del rol a los parámetros de la consulta
           params.push(filters.role);
       }
 
-      // Ejecutamos la consulta en el pool de conexiones de la base de datos
+      // Ejecutamos la consulta en el pool de conexiones de base de datos
       const [rows] = await pool.query(query, params);
-      // Retornamos el total de registros encontrados
+      // Retornamos el valor numérico absoluto correspondiente al conteo total
       return rows[0].total;
   },
 
@@ -56,9 +58,9 @@ export const UserModel = {
    * @param {Object} [filters={}] - Parámetros de control de la tabla.
    * @returns {Promise<Array<Object>>} Colección de usuarios.
    */
-  // Construye la matriz de usuarios inyectando su conteo histórico de ventas y la compilación JSON de sus roles
+  // Recupera todos los usuarios aplicando filtros, paginación y ordenamiento
   findAllDynamic: async (filters = {}) => {
-      // Definimos la consulta base que recupera datos de usuarios, la cantidad de ventas, y un arreglo JSON con sus roles mapeados
+      // Consulta SQL estructurada con subconsultas para evitar duplicación de filas y formatear roles a JSON array en base de datos
       let query = `
           SELECT 
               u.id, 
@@ -78,53 +80,57 @@ export const UserModel = {
           FROM users u
           WHERE 1=1
       `;
-      // Declaramos un arreglo vacío para almacenar los parámetros de la consulta SQL parametrizada
+      // Inicializamos un arreglo de parámetros para la inyección SQL segura
       const params = [];
 
-      // Si se proporciona un término de búsqueda, agregamos la condición LIKE a la consulta en nombre y correo
+      // Filtro de búsqueda por texto (nombre o correo)
       if (filters.search) {
+          // Agregamos la restricción con LIKE para buscar coincidencias
           query += ` AND (u.name LIKE ? OR u.email LIKE ?)`;
-          // Creamos el término de búsqueda con comodines para SQL
+          // Definimos el comodín del texto para la búsqueda
           const likeTerm = `%${filters.search}%`;
-          // Insertamos los términos de búsqueda en el arreglo de parámetros
+          // Registramos el parámetro para el nombre y el correo
           params.push(likeTerm, likeTerm);
       }
 
-      // Si se proporciona un filtro por rol, agregamos una subconsulta EXISTS para verificar que el usuario tenga ese rol
+      // Filtro de búsqueda por rol
       if (filters.role) {
+          // Buscamos que exista una relación en la tabla puente con un rol que tenga el nombre seleccionado
           query += ` AND EXISTS (
               SELECT 1 FROM user_roles ur2 
               INNER JOIN roles r2 ON ur2.role_id = r2.id 
               WHERE ur2.user_id = u.id AND r2.name = ?
           )`;
-          // Añadimos el nombre del rol a los parámetros de la consulta
+          // Registramos el parámetro del rol en el arreglo
           params.push(filters.role);
       }
 
-      // Definimos las columnas por las cuales está permitido ordenar los resultados
+      // Definición de columnas permitidas para el ordenamiento
       const allowedSortColumns = ['id', 'name', 'email', 'created_at', 'sales_count'];
-      // Validamos que el parámetro sortBy provisto sea una columna permitida, por defecto ordenamos por 'name'
+      // Validamos que el criterio de ordenamiento pertenezca a la lista de columnas válidas (por defecto 'name')
       const sortBy = allowedSortColumns.includes(filters.sortBy) ? filters.sortBy : 'name';
-      // Sanitizamos el orden de clasificación (ASC o DESC)
+      // Validamos que la dirección de ordenamiento sea ASC o DESC (por defecto 'ASC')
       const sortOrder = String(filters.sortOrder).toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
       
-      // Adjuntamos el ordenamiento a la consulta SQL
+      // Concatenamos el ordenamiento seleccionado a la consulta SQL
       query += ` ORDER BY ${sortBy} ${sortOrder}`;
 
-      // Si se requiere paginación, aplicamos las cláusulas LIMIT y OFFSET
+      // Si no se desactivó explícitamente la paginación
       if (String(filters.paginate) !== 'false') {
+          // Agregamos los límites de corte (LIMIT y OFFSET) para recuperar un rango de datos específico
           query += ` LIMIT ? OFFSET ?`;
-          // Agregamos el límite y el desplazamiento a los parámetros de la consulta
+          // Inyectamos el límite de registros por página y el índice de inicio calculado
           params.push(Number(filters.limit || 10), Number(filters.offset || 0));
       } else if (filters.limit) {
-          // Si no se requiere paginación completa pero se especificó un límite de registros
+          // Si solo se solicita un límite simple, se añade LIMIT a secas
           query += ` LIMIT ?`;
+          // Registramos el valor numérico del límite
           params.push(Number(filters.limit));
       }
 
-      // Ejecutamos la consulta dinámica parametrizada
+      // Ejecutamos la consulta dinámica completa en la base de datos MySQL
       const [rows] = await pool.query(query, params);
-      // Retornamos el arreglo de usuarios devuelto por la base de datos
+      // Retornamos el conjunto mapeado de usuarios devuelto por la base de datos
       return rows;
   },
 
