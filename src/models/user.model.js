@@ -18,17 +18,36 @@ export const UserModel = {
    * @param {Object} [filters={}] - Parámetros de consulta dinámica.
    * @returns {Promise<number>}
    */
+  // Realiza el conteo absoluto de la entidad evaluando restricciones de búsqueda
   countDynamic: async (filters = {}) => {
+      // Definimos la consulta base para contar el total de usuarios
       let query = `SELECT COUNT(id) as total FROM users WHERE 1=1`;
+      // Declaramos un arreglo vacío para almacenar los parámetros de la consulta SQL parametrizada
       const params = [];
 
+      // Si se proporciona un término de búsqueda, agregamos la condición LIKE a la consulta
       if (filters.search) {
           query += ` AND (name LIKE ? OR email LIKE ?)`;
+          // Creamos el término con comodines para buscar en nombre o correo
           const likeTerm = `%${filters.search}%`;
+          // Insertamos el término dos veces (uno para name y otro para email) en el arreglo de parámetros
           params.push(likeTerm, likeTerm);
       }
 
+      // Si se proporciona un filtro por rol, agregamos una subconsulta EXISTS para verificar que el usuario tenga ese rol
+      if (filters.role) {
+          query += ` AND EXISTS (
+              SELECT 1 FROM user_roles ur2 
+              INNER JOIN roles r2 ON ur2.role_id = r2.id 
+              WHERE ur2.user_id = users.id AND r2.name = ?
+          )`;
+          // Añadimos el nombre del rol a los parámetros de la consulta
+          params.push(filters.role);
+      }
+
+      // Ejecutamos la consulta en el pool de conexiones de la base de datos
       const [rows] = await pool.query(query, params);
+      // Retornamos el total de registros encontrados
       return rows[0].total;
   },
 
@@ -37,7 +56,9 @@ export const UserModel = {
    * @param {Object} [filters={}] - Parámetros de control de la tabla.
    * @returns {Promise<Array<Object>>} Colección de usuarios.
    */
+  // Construye la matriz de usuarios inyectando su conteo histórico de ventas y la compilación JSON de sus roles
   findAllDynamic: async (filters = {}) => {
+      // Definimos la consulta base que recupera datos de usuarios, la cantidad de ventas, y un arreglo JSON con sus roles mapeados
       let query = `
           SELECT 
               u.id, 
@@ -57,29 +78,53 @@ export const UserModel = {
           FROM users u
           WHERE 1=1
       `;
+      // Declaramos un arreglo vacío para almacenar los parámetros de la consulta SQL parametrizada
       const params = [];
 
+      // Si se proporciona un término de búsqueda, agregamos la condición LIKE a la consulta en nombre y correo
       if (filters.search) {
           query += ` AND (u.name LIKE ? OR u.email LIKE ?)`;
+          // Creamos el término de búsqueda con comodines para SQL
           const likeTerm = `%${filters.search}%`;
+          // Insertamos los términos de búsqueda en el arreglo de parámetros
           params.push(likeTerm, likeTerm);
       }
 
+      // Si se proporciona un filtro por rol, agregamos una subconsulta EXISTS para verificar que el usuario tenga ese rol
+      if (filters.role) {
+          query += ` AND EXISTS (
+              SELECT 1 FROM user_roles ur2 
+              INNER JOIN roles r2 ON ur2.role_id = r2.id 
+              WHERE ur2.user_id = u.id AND r2.name = ?
+          )`;
+          // Añadimos el nombre del rol a los parámetros de la consulta
+          params.push(filters.role);
+      }
+
+      // Definimos las columnas por las cuales está permitido ordenar los resultados
       const allowedSortColumns = ['id', 'name', 'email', 'created_at', 'sales_count'];
+      // Validamos que el parámetro sortBy provisto sea una columna permitida, por defecto ordenamos por 'name'
       const sortBy = allowedSortColumns.includes(filters.sortBy) ? filters.sortBy : 'name';
+      // Sanitizamos el orden de clasificación (ASC o DESC)
       const sortOrder = String(filters.sortOrder).toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
       
+      // Adjuntamos el ordenamiento a la consulta SQL
       query += ` ORDER BY ${sortBy} ${sortOrder}`;
 
+      // Si se requiere paginación, aplicamos las cláusulas LIMIT y OFFSET
       if (String(filters.paginate) !== 'false') {
           query += ` LIMIT ? OFFSET ?`;
+          // Agregamos el límite y el desplazamiento a los parámetros de la consulta
           params.push(Number(filters.limit || 10), Number(filters.offset || 0));
       } else if (filters.limit) {
+          // Si no se requiere paginación completa pero se especificó un límite de registros
           query += ` LIMIT ?`;
           params.push(Number(filters.limit));
       }
 
+      // Ejecutamos la consulta dinámica parametrizada
       const [rows] = await pool.query(query, params);
+      // Retornamos el arreglo de usuarios devuelto por la base de datos
       return rows;
   },
 

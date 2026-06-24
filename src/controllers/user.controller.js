@@ -16,18 +16,30 @@ export const UserController = {
      * @param {Object} res - Objeto de respuesta Express.
      * @returns {Promise<void>} 
      */
+    // Método controlador para obtener todos los usuarios con filtros y paginación
     getAll: catchAsync(async (req, res) => {
+        // Creamos un objeto de filtros extrayendo los parámetros de la solicitud HTTP
         const filters = {
+            // Término de búsqueda de texto (nombre o correo)
             search: req.query.search || null,
+            // Nombre del rol para filtrar los usuarios correspondientes
+            role: req.query.role || null,
+            // Número de página actual para la paginación
             page: req.query.page,
+            // Límite de elementos por página
             limit: req.query.limit,
+            // Indicador para desactivar la paginación (si viene 'false')
             paginate: req.query.paginate,
+            // Columna por la cual ordenar los resultados
             sortBy: req.query.sortBy,
+            // Dirección del ordenamiento (ASC o DESC)
             sortOrder: req.query.sortOrder
         };
 
+        // Invocamos al servicio de usuarios pasándole los filtros construidos
         const result = await UserService.getAllUsers(filters);
         
+        // Retornamos una respuesta HTTP exitosa (código 200) con el resultado obtenido
         return successResponse(res, 200, "Lista de usuarios recuperada exitosamente.", result);
     }),
 
