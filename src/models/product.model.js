@@ -48,6 +48,7 @@ export const ProductModel = {
       let query = `
           SELECT 
               p.*, 
+              p.is_active as isActive,
               c.name as category 
           FROM products p
           LEFT JOIN categories c ON p.category_id = c.id
@@ -177,7 +178,7 @@ export const ProductModel = {
     if (result.affectedRows === 0) return null;
 
     const [updatedProduct] = await pool.query(
-        "SELECT * FROM products WHERE id = ?", [id]
+        "SELECT *, is_active as isActive FROM products WHERE id = ?", [id]
     );
     return updatedProduct[0];
 },
