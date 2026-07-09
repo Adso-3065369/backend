@@ -7,7 +7,7 @@ import {
   checkPermission  
 } from "../middlewares/index.js";
 
-import { productSchema } from "../schemas/product.schema.js";
+import { productSchema, productStatusSchema  } from "../schemas/product.schema.js";
 
 /**
  * @file product.routes.js
@@ -69,6 +69,19 @@ productRouter.put(
   checkPermission("products.update"), 
   validateSchema(productSchema), 
   ProductController.update
+);
+
+/**
+ * @route PATCH /:id/status
+ * @description Actualiza únicamente el estado activo/inactivo de un producto.
+ * @access Privado (Requiere permiso 'products.update')
+ */
+productRouter.patch(
+  "/:id/status",
+  verifyToken,
+  checkPermission("products.update"),
+  validateSchema(productStatusSchema),
+  ProductController.toggleStatus
 );
 
 /**
