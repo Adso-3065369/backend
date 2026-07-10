@@ -5,6 +5,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "db:init": "node scripts/init-db.js",
     "test:pipeline": "cross-env DOTENV_CONFIG_PATH=.env.test node --no-warnings --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --detectOpenHandles --forceExit --silent",
     "test:coverage": "cross-env DOTENV_CONFIG_PATH=.env.test node --no-warnings --experimental-vm-modules node_modules/jest/bin/jest.js --coverage --runInBand"
   },
