@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+// Regex de contraseña fuerte: mínimo 8 chars, 1 mayúscula, 1 minúscula, 1 número
+const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+const strongPasswordMessage = "La contraseña debe contener al menos una mayúscula (A-Z), una minúscula (a-z) y un número (0-9).";
+
 // Molde estricto para el registro de un nuevo usuario
 export const registerSchema = z.object({
   name: z.string({
@@ -15,7 +19,9 @@ export const registerSchema = z.object({
   password: z.string({
     required_error: "La contraseña es obligatoria",
     invalid_type_error: "La contraseña debe ser un texto"
-  }).min(6, "La contraseña debe tener al menos 6 caracteres")
+  })
+  .min(8, "La contraseña debe tener al menos 8 caracteres")
+  .regex(strongPasswordRegex, strongPasswordMessage)
 
 }).strict({
   message: "No envíes campos adicionales que no pertenecen al registro"
@@ -28,7 +34,7 @@ export const loginSchema = z.object({
 
   password: z.string({
     required_error: "La contraseña es obligatoria"
-  }).min(6, "La contraseña debe tener al menos 6 caracteres")
+  }).min(8, "La contraseña debe tener al menos 8 caracteres")
 }).strict({
   message: "No envíes campos adicionales al iniciar sesión"
 });
@@ -42,3 +48,13 @@ export const refreshTokenSchema = z.object({
 }).strict({
   message: "No envíes campos adicionales al renovar el token"
 });
+
+// Molde para restablecer la contraseña
+export const resetPasswordSchema = z.object({
+  token: z.string({ required_error: "El token es obligatorio" }),
+  password: z.string({
+    required_error: "La contraseña es obligatoria"
+  })
+  .min(8, "La contraseña debe tener al menos 8 caracteres")
+  .regex(strongPasswordRegex, strongPasswordMessage)
+}).strict();

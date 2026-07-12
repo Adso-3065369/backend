@@ -35,6 +35,27 @@ export const AuthController = {
     } catch (error) {
       return next(error);
     }
-  })
+  }),
 
-};
+  forgotPassword: catchAsync(async (req, res, next) => {
+    const { email } = req.body;
+    try {
+      await AuthService.forgotPassword(email);
+      // Siempre 200 para no revelar si el correo existe o no
+      return successResponse(res, 200, "Si el correo existe, recibirás un enlace de recuperación.", {});
+    } catch (error) {
+      return next(error);
+    }
+  }),
+
+  resetPassword: catchAsync(async (req, res, next) => {
+    const { token, password } = req.body;
+    try {
+      await AuthService.resetPassword(token, password);
+      return successResponse(res, 200, "Contraseña actualizada correctamente.", {});
+    } catch (error) {
+      return next(error);
+    }
+  }),
+
+};
