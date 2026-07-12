@@ -4,58 +4,35 @@ import { catchAsync } from "../utils/catchAsync.js";
 
 export const AuthController = {
   
-  register: catchAsync(async (req, res, next) => {
+  register: catchAsync(async (req, res) => {
     const { name, email, password } = req.body;
-
-    try {
-      const user = await AuthService.registerUser(name, email, password);
-      return successResponse(res, 201, "Usuario registrado exitosamente", user);
-    } catch (error) {
-      return next(error); // Pasamos el error al manejador global de Express
-    }
+    const user = await AuthService.registerUser(name, email, password);
+    return successResponse(res, 201, "Usuario registrado exitosamente", user);
   }),
 
-  login: catchAsync(async (req, res, next) => {
+  login: catchAsync(async (req, res) => {
     const { email, password } = req.body;
-
-    try {
-      const data = await AuthService.loginUser(email, password);
-      return successResponse(res, 200, "Inicio de sesión exitoso", data);
-    } catch (error) {
-      return next(error);
-    }
+    const data = await AuthService.loginUser(email, password);
+    return successResponse(res, 200, "Inicio de sesión exitoso", data);
   }),
 
-  refreshToken: catchAsync(async (req, res, next) => {
+  refreshToken: catchAsync(async (req, res) => {
     const { refreshToken } = req.body;
-    
-    try {
-      const data = await AuthService.refreshAccessToken(refreshToken);
-      return successResponse(res, 200, "Token renovado exitosamente", data);
-    } catch (error) {
-      return next(error);
-    }
+    const data = await AuthService.refreshAccessToken(refreshToken);
+    return successResponse(res, 200, "Token renovado exitosamente", data);
   }),
 
-  forgotPassword: catchAsync(async (req, res, next) => {
+  forgotPassword: catchAsync(async (req, res) => {
     const { email } = req.body;
-    try {
-      await AuthService.forgotPassword(email);
-      // Siempre 200 para no revelar si el correo existe o no
-      return successResponse(res, 200, "Si el correo existe, recibirás un enlace de recuperación.", {});
-    } catch (error) {
-      return next(error);
-    }
+    await AuthService.forgotPassword(email);
+    // Siempre 200 para no revelar si el correo existe o no
+    return successResponse(res, 200, "Si el correo existe, recibirás un enlace de recuperación.", {});
   }),
 
-  resetPassword: catchAsync(async (req, res, next) => {
+  resetPassword: catchAsync(async (req, res) => {
     const { token, password } = req.body;
-    try {
-      await AuthService.resetPassword(token, password);
-      return successResponse(res, 200, "Contraseña actualizada correctamente.", {});
-    } catch (error) {
-      return next(error);
-    }
-  }),
+    await AuthService.resetPassword(token, password);
+    return successResponse(res, 200, "Contraseña actualizada correctamente.", {});
+  })
 
-};
+};

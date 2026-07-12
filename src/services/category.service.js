@@ -15,7 +15,7 @@ export const CategoryService = {
      * @param {Object} filters - Diccionario de parámetros de URL.
      * @returns {Promise<Object|Array>} Estructura paginada o arreglo plano.
      */
-    getCategories: async (filters) => {
+    getCategories: async (filters = {}) => {
         if (String(filters.paginate) === 'false') {
             return await CategoryModel.findAllDynamic(filters);
         }
@@ -24,12 +24,16 @@ export const CategoryService = {
         const page = Number(filters.page) || 1;
         const offset = (page - 1) * limit;
 
-        filters.limit = limit;
-        filters.offset = offset;
+        // Clonación defensiva: Creamos un nuevo objeto para la base de datos
+        const dbQueryParams = {
+            ...filters,
+            limit,
+            offset
+        };
 
         const [totalItems, categories] = await Promise.all([
-            CategoryModel.countDynamic(filters),
-            CategoryModel.findAllDynamic(filters)
+            CategoryModel.countDynamic(dbQueryParams),
+            CategoryModel.findAllDynamic(dbQueryParams)
         ]);
 
         const totalPages = Math.ceil(totalItems / limit);

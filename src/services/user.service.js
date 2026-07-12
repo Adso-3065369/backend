@@ -31,28 +31,38 @@ export const UserService = {
 
     /**
      * @description Coordina la extracción paginada o plana del directorio de usuarios.
-     * @param {Object} filters - Diccionario de parámetros de control.
+     * @param {Object} filters - Diccionario de parámetros de control (Tratado como Inmutable).
      * @returns {Promise<Object|Array>} Estructura paginada o arreglo plano.
      */
     getAllUsers: async (filters = {}) => {
+        // 1. Ruta plana: Pasamos el objeto original sin tocarlo
         if (String(filters.paginate) === 'false') {
             return await UserModel.findAllDynamic(filters);
         }
 
+        // 2. Cálculos matemáticos aislados
         const limit = Number(filters.limit) || 10;
         const page = Number(filters.page) || 1;
         const offset = (page - 1) * limit;
 
-        filters.limit = limit;
-        filters.offset = offset;
+        // 3. SOLUCIÓN ARQUITECTÓNICA: Clonación Defensiva
+        // Creamos un NUEVO objeto que hereda los filtros originales (ej. search, role)
+        // y le inyectamos/sobrescribimos las variables de paginación estrictas.
+        const dbQueryParams = {
+            ...filters, 
+            limit,
+            offset
+        };
 
+        // 4. Ejecución concurrente usando el nuevo objeto sanitizado
         const [totalItems, users] = await Promise.all([
-            UserModel.countDynamic(filters),
-            UserModel.findAllDynamic(filters)
+            UserModel.countDynamic(dbQueryParams),
+            UserModel.findAllDynamic(dbQueryParams)
         ]);
 
         const totalPages = Math.ceil(totalItems / limit);
 
+        // 5. Retorno estructurado
         return {
             data: users,
             meta: {
