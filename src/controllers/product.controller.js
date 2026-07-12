@@ -21,7 +21,8 @@ export const ProductController = {
     getAll: catchAsync(async (req, res) => {
         // Empaquetado estricto de parámetros de URL (Dynamic Query String)
         const filters = {
-            search: req.query.search || null,
+            search: req.query.search || null,   // Búsqueda general (nombre o código)
+            name: req.query.name || null,       // Búsqueda estricta por nombre
             page: req.query.page,
             limit: req.query.limit,
             is_active: req.query.is_active,     // Filtro de estado
