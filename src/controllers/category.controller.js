@@ -24,6 +24,20 @@ export const CategoryController = {
         };
 
         const result = await CategoryService.getCategories(filters);
+
+        // Expose hasLinkedProducts flag to be consumed by the frontend view
+        if (result && Array.isArray(result.data)) {
+            result.data = result.data.map(category => ({
+                ...category,
+                hasLinkedProducts: category.has_products || (Number(category.product_count) > 0)
+            }));
+        } else if (Array.isArray(result)) {
+            result = result.map(category => ({
+                ...category,
+                hasLinkedProducts: category.has_products || (Number(category.product_count) > 0)
+            }));
+        }
+
         return successResponse(res, 200, "Lista de categorías recuperada exitosamente.", result);
     }),
 
@@ -40,7 +54,12 @@ export const CategoryController = {
             return next(error);
         }
 
-        return successResponse(res, 200, "Categoría encontrada correctamente.", category);
+        const categoryWithLinked = {
+            ...category,
+            hasLinkedProducts: category.has_products || (Number(category.product_count) > 0)
+        };
+
+        return successResponse(res, 200, "Categoría encontrada correctamente.", categoryWithLinked);
     }),
 
     /**
