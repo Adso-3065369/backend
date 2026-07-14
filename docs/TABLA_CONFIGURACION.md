@@ -35,4 +35,15 @@ INSERT INTO permissions (name, code, description) VALUES
 ```
 
 
-# VISTA PERMISOS
+# VISTA ROLES
+
+En la vista de **Roles** desde el rol de **Administrador**, acceder a este mismo rol y editar los permisos para validar los permisos de ver y editar configuracion
+
+Se recomienda encarecidamente validar que los permisos de Administrador puedan acceder a Configuracion
+
+# Permisos
+
+ - Configuracion
+ - Actualizar Configuracion
+
+Con esos permisos valide que esten verificados en el rol de Administrador y luego darle a **Actualizar rol** para guardar los cambios
