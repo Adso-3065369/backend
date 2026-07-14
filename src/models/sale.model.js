@@ -102,10 +102,10 @@ export const SaleModel = {
 
         // 1. Filtro Global (Código, Cliente, Vendedor, )
         if (filters.search) {
-            query += ` AND (c.name LIKE ? OR s.id = ?)`;
+            query += ` AND (c.name LIKE ? OR u.name LIKE ? OR s.id = ?)`;
             const likeTerm = `%${filters.search}%`;
             // 3 LIKES y 1 EXACT MATCH (Igual que en el countDynamic)
-            params.push(likeTerm, filters.search);
+            params.push(likeTerm, likeTerm, filters.search);
         }
 
         // 2. Filtro de Fecha Exacta
