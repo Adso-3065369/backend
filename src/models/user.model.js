@@ -242,11 +242,26 @@ export const UserModel = {
   // ========================================================================
 
   /**
+   * @description Actualiza la contraseña hasheada del usuario.
+   * @param {number|string} id - Identificador del usuario.
+   * @param {string} hashedPassword - Nueva contraseña ya hasheada.
+   * @returns {Promise<boolean>}
+   */
+  updatePassword: async (id, hashedPassword) => {
+    const [result] = await pool.query(
+      'UPDATE users SET password = ? WHERE id = ?',
+      [hashedPassword, id]
+    );
+    return result.affectedRows > 0;
+  },
+
+  /**
    * @description Purga el mapeo de roles en el contexto de una transacción atómica.
    * @param {number|string} userId - Identificador del usuario.
    * @param {Object} connection - Instancia del pool transaccional.
    */
   deleteUserRoles: async (userId, connection) => {
+
       await connection.query(
           "DELETE FROM user_roles WHERE user_id = ?", 
           [userId]

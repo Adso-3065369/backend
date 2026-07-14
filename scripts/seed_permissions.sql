@@ -35,7 +35,8 @@ INSERT IGNORE INTO permissions (name, code, description) VALUES
 ('Crear Ventas', 'sales.create', 'Permite registrar y facturar nuevas ventas'),
 ('Actualizar Ventas', 'sales.update', 'Permite modificar detalles de ventas existentes'),
 ('Eliminar Ventas', 'sales.delete', 'Permite anular ventas del sistema'),
-('Configuración', 'config.index', 'Permite Ingresar a la vista de configuracion del sistema');
+('Configuración', 'config.index', 'Permite Ingresar a la vista de configuracion del sistema'),
+('Actualizar Configuración', 'config.update', 'Permite cambiar IVA y datos del negocio');
 
 SET FOREIGN_KEY_CHECKS = 1;
 COMMIT;

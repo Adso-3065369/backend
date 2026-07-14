@@ -18,44 +18,32 @@ export const categoryRouter = Router();
 
 categoryRouter.get(
   "/",
-  verifyToken,
-  checkPermission("categories.index"),
   CategoryController.getAll
 );
 
 categoryRouter.get(
   "/:id",
-  verifyToken,
-  checkPermission("categories.view"),
   CategoryController.getById
 );
 
 categoryRouter.post(
   "/",
-  verifyToken,
-  checkPermission("categories.create"),
   validateSchema(categorySchema),
   CategoryController.create
 );
 
 categoryRouter.put(
   "/:id",
-  verifyToken,
   validateSchema(categorySchema),
-  checkPermission("categories.update"),
   CategoryController.update
 );
 
 categoryRouter.delete(
   "/:id",
-  verifyToken,
-  checkPermission("categories.delete"),
   CategoryController.delete
 );
 
 categoryRouter.get(
   "/:id/products",
-  verifyToken, 
-  checkPermission("categories.view"),
   CategoryController.getProductsByCategory
 );
