@@ -7,3 +7,4 @@ export * from './user.routes.js';
 export * from './dashboard.routes.js';
 export * from './client.routes.js';
 export * from './sales.routes.js';
+export * from './config.routes.js';

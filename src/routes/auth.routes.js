@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { AuthController } from "../controllers/auth.controller.js";
 import { validateSchema } from "../middlewares/validator.middleware.js";
-import { registerSchema, loginSchema, refreshTokenSchema } from "../schemas/auth.schema.js";
+import { registerSchema, loginSchema, refreshTokenSchema, resetPasswordSchema } from "../schemas/auth.schema.js";
+
 
 export const authRouter = Router();
 
@@ -33,3 +34,14 @@ authRouter.post(
   validateSchema(refreshTokenSchema), 
   AuthController.refreshToken
 );
+
+// ==========================================
+// Rutas de Recuperación de Contraseña
+// ==========================================
+
+// Solicitar enlace de recuperación por email
+authRouter.post("/forgot-password", AuthController.forgotPassword);
+
+// Restablecer contraseña con el token recibido por email
+authRouter.post("/reset-password", validateSchema(resetPasswordSchema), AuthController.resetPassword);
+

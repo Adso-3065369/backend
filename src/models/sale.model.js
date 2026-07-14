@@ -128,7 +128,8 @@ export const SaleModel = {
             params.push(Number(filters.limit));
         }
 
-        const [rows] = await pool.query(query, params);
+        const [rows] = await pool.query(query, params);     
+        
         return rows;
     },
 
