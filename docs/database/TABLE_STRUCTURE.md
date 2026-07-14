@@ -150,6 +150,8 @@ CREATE TABLE sale_details (
 );
 ```
 
+## -- 11.
+
 ## Nota Técnica
 
 * **Integridad Referencial:** Se utiliza `ON DELETE CASCADE` en las tablas pivote para que, al eliminar un usuario o un rol, sus relaciones se limpien automáticamente de las tablas intermedias, evitando así que queden registros "huérfanos".
