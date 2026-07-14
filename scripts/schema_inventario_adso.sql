@@ -130,3 +130,4 @@ CREATE TABLE sale_details (
     FOREIGN KEY (sale_id) REFERENCES sales(id) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
 );
+select *from users;
