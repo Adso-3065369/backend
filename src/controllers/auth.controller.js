@@ -25,8 +25,7 @@ export const AuthController = {
   forgotPassword: catchAsync(async (req, res) => {
     const { email } = req.body;
     await AuthService.forgotPassword(email);
-    // Siempre 200 para no revelar si el correo existe o no
-    return successResponse(res, 200, "Si el correo existe, recibirás un enlace de recuperación.", {});
+    return successResponse(res, 200, "Se ha enviado un enlace de recuperación a tu correo.", {});
   }),
 
   resetPassword: catchAsync(async (req, res) => {

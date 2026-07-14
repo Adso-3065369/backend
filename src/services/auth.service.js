@@ -141,8 +141,12 @@ export const AuthService = {
   forgotPassword: async (email) => {
     const user = await UserModel.findByEmail(email);
 
-    // Por seguridad respondemos igual aunque el email no exista (evita enumerar usuarios)
-    if (!user) return;
+    // Validar que el correo esté registrado antes de intentar enviar el enlace
+    if (!user) {
+      const error = new Error("El correo ingresado no está registrado en el sistema.");
+      error.statusCode = 404;
+      throw error;
+    }
 
     const resetToken = jwt.sign(
       { id: user.id },
