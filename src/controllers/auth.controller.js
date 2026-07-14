@@ -10,7 +10,9 @@ export const AuthController = {
     try {
       const user = await AuthService.registerUser(name, email, password);
       return successResponse(res, 201, "Usuario registrado exitosamente", user);
-    } catch (error) {
+    } 
+    
+    catch (error) {
       return next(error); // Pasamos el error al manejador global de Express
     }
   }),

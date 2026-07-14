@@ -44,10 +44,14 @@ export const RoleModel = {
         await connection.commit(); // Confirmamos los cambios
         return newRoleId; // Retornamos el ID para que el servicio lo use
 
-    } catch (error) {
+    } 
+    
+    catch (error) {
         await connection.rollback(); // Deshacemos todo si hay un fallo
         throw error;
-    } finally {
+    } 
+    
+    finally {
         connection.release(); // Liberamos la conexión
     }
 },
@@ -86,10 +90,14 @@ export const RoleModel = {
             await connection.commit(); // 3. Si todo salió bien, guardamos los cambios
             return true;
 
-        } catch (error) {
+        } 
+        
+        catch (error) {
             await connection.rollback(); // Si algo falla, deshacemos todo
             throw error;
-        } finally {
+        } 
+        
+        finally {
             connection.release(); // 4. Liberamos la conexión de vuelta al pool
         }
     },
