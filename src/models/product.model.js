@@ -35,6 +35,12 @@ export const ProductModel = {
           params.push(likeTerm, likeTerm);
       }
 
+      if (filters.name) {
+          query += ` AND p.name LIKE ?`;
+          const likeName = `%${filters.name}%`;
+          params.push(likeName);
+      }
+
       const [rows] = await pool.query(query, params);
       return rows[0].total;
   },
@@ -70,6 +76,12 @@ export const ProductModel = {
           query += ` AND (p.name LIKE ? OR p.code LIKE ?)`;
           const likeTerm = `%${filters.search}%`; 
           params.push(likeTerm, likeTerm);
+      }
+
+      if (filters.name) {
+          query += ` AND p.name LIKE ?`;
+          const likeName = `%${filters.name}%`;
+          params.push(likeName);
       }
 
       const allowedSortColumns = ['id', 'name', 'price', 'stock', 'code', 'created_at'];
