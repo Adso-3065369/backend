@@ -48,6 +48,7 @@ export const ProductModel = {
       let query = `
           SELECT 
               p.*, 
+              p.is_active as isActive,
               c.name as category 
           FROM products p
           LEFT JOIN categories c ON p.category_id = c.id
@@ -140,7 +141,7 @@ export const ProductModel = {
   },
 
   /**
-   * @description Actualiza la información de un producto existente y su estado activo/inactivo
+   * @description Actualiza la información de un producto existente y su estado activo/inactivo.
    * @param {number} id - Identificador del producto a actualizar.
    * @param {Object} updatedFields - Campos actualizados.
    * @returns {Promise<Object|null>} El producto actualizado o null si no se encontró el ID.
@@ -164,6 +165,21 @@ export const ProductModel = {
 
     const [result] = await pool.query(query, params);
     return result.affectedRows > 0 ? await ProductModel.findById(id) : null;
+},
+
+  ///////////////////
+  toggleStatus: async (id, isActive) => {
+    const [result] = await pool.query(
+        "UPDATE products SET is_active = ? WHERE id = ?",
+        [isActive ? 1 : 0, id]
+    );
+
+    if (result.affectedRows === 0) return null;
+
+    const [updatedProduct] = await pool.query(
+        "SELECT *, is_active as isActive FROM products WHERE id = ?", [id]
+    );
+    return updatedProduct[0];
 },
 
   /**

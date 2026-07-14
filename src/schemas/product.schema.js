@@ -44,9 +44,23 @@ export const productSchema = z
       .nonnegative("El stock no puede ser negativo"),
 
       isActive: z
+<<<<<<< HEAD
       .boolean({
         invalid_type_error: "El estado debe ser verdadero o falso",
       })
       .optional(),
+=======
+        .boolean({
+            invalid_type_error: "El campo isActive debe ser un valor booleano (true o false)",
+        })
+        .optional(),
+>>>>>>> b48b098d2f49f997a2d8d6810548f01b92852fed
   })
   .strict("No envíes campos adicionales que no pertenecen al producto");
+
+export const productStatusSchema = z.object({
+    isActive: z.boolean({
+        required_error: "El campo isActive es obligatorio",
+        invalid_type_error: "El campo isActive debe ser un valor booleano (true o false)",
+    }),
+}).strict("Solo se permite el campo 'isActive' en esta operación");
