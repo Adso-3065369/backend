@@ -140,7 +140,7 @@ export const ProductModel = {
   },
 
   /**
-   * @description Actualiza la información de un producto existente y su estado activo/inactivo.
+   * @description Actualiza la información de un producto existente y su estado activo/inactivo
    * @param {number} id - Identificador del producto a actualizar.
    * @param {Object} updatedFields - Campos actualizados.
    * @returns {Promise<Object|null>} El producto actualizado o null si no se encontró el ID.
