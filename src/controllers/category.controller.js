@@ -23,7 +23,7 @@ export const CategoryController = {
             sortOrder: req.query.sortOrder
         };
 
-        const result = await CategoryService.getCategories(filters);
+        let result = await CategoryService.getCategories(filters);
 
         // Expose hasLinkedProducts flag to be consumed by the frontend view
         if (result && Array.isArray(result.data)) {
