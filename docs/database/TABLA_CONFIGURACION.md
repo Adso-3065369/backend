@@ -29,7 +29,7 @@ el markdown de RBAC_GUIDE.md para su mejor visualizacion y comprension
 El administrador puede visualizar y editar la informacion de la empresa.
 
 ```sql
-INSERT INTO permissions (name, code, description) VALUES
+INSERT IGNORE INTO permissions (name, code, description) VALUES
 ('Configuración', 'config.index', 'Permite Ingresar a la vista de configuracion del sistema'),
 ('Actualizar Configuración', 'config.update', 'Permite cambiar IVA y datos del negocio');
 ```
