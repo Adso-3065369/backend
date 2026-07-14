@@ -8,6 +8,40 @@ import pool from "../config/db.js";
  * - Seguridad: Utiliza sentencias preparadas para prevenir ataques de Inyección SQL.
  * - Modulabilidad: Separa la lógica de persistencia de la lógica de negocio.
  */
+/**
+ * @description Helper para construir cláusulas WHERE dinámicas y sus parámetros.
+ * @param {Object} filters - Objeto con los filtros aplicados.
+ * @returns {Object} Contiene { whereClause, params }
+ */
+const buildDynamicFilters = (filters) => {
+    let whereClause = '';
+    const params = [];
+
+    if (filters.is_active !== undefined) {
+        whereClause += ` AND p.is_active = ?`;
+        params.push(Number(filters.is_active));
+    }
+
+    if (filters.category_id) {
+        whereClause += ` AND p.category_id = ?`;
+        params.push(Number(filters.category_id));
+    }
+
+    if (filters.search) {
+        whereClause += ` AND (p.name LIKE ? OR p.code LIKE ?)`;
+        const likeTerm = `%${filters.search}%`;
+        params.push(likeTerm, likeTerm);
+    }
+
+    if (filters.name) {
+        whereClause += ` AND p.name LIKE ?`;
+        const likeName = `%${filters.name}%`;
+        params.push(likeName);
+    }
+
+    return { whereClause, params };
+};
+
 export const ProductModel = { 
 
   /**
@@ -17,23 +51,8 @@ export const ProductModel = {
    */
   countDynamic: async (filters = {}) => {
       let query = `SELECT COUNT(p.id) as total FROM products p WHERE 1=1`;
-      const params = [];
-
-      if (filters.is_active !== undefined) {
-          query += ` AND p.is_active = ?`;
-          params.push(Number(filters.is_active));
-      }
-
-      if (filters.category_id) {
-          query += ` AND p.category_id = ?`;
-          params.push(Number(filters.category_id));
-      }
-
-      if (filters.search) {
-          query += ` AND (p.name LIKE ? OR p.code LIKE ?)`;
-          const likeTerm = `%${filters.search}%`;
-          params.push(likeTerm, likeTerm);
-      }
+      const { whereClause, params } = buildDynamicFilters(filters);
+      query += whereClause;
 
       if (filters.name) {
           query += ` AND p.name LIKE ?`;
@@ -60,23 +79,8 @@ export const ProductModel = {
           LEFT JOIN categories c ON p.category_id = c.id
           WHERE 1=1
       `;
-      const params = [];
-
-      if (filters.is_active !== undefined) {
-          query += ` AND p.is_active = ?`;
-          params.push(Number(filters.is_active));
-      }
-
-      if (filters.category_id) {
-          query += ` AND p.category_id = ?`;
-          params.push(Number(filters.category_id));
-      }
-
-      if (filters.search) {
-          query += ` AND (p.name LIKE ? OR p.code LIKE ?)`;
-          const likeTerm = `%${filters.search}%`; 
-          params.push(likeTerm, likeTerm);
-      }
+      const { whereClause, params } = buildDynamicFilters(filters);
+      query += whereClause;
 
       if (filters.name) {
           query += ` AND p.name LIKE ?`;
