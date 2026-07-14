@@ -9,6 +9,7 @@ USE inventario_adso;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- Limpieza de tablas
+DROP TABLE IF EXISTS configurations;
 DROP TABLE IF EXISTS sale_details;
 DROP TABLE IF EXISTS sales;
 DROP TABLE IF EXISTS clients;
@@ -130,4 +131,14 @@ CREATE TABLE sale_details (
     FOREIGN KEY (sale_id) REFERENCES sales(id) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
 );
-select *from users;
+
+-- =================================================================
+-- 5. Módulo de Configuración Global
+-- =================================================================
+CREATE TABLE configurations (
+    id INT PRIMARY KEY DEFAULT 1,
+    nombre_negocio VARCHAR(150) NOT NULL,
+    nit VARCHAR(50) NOT NULL,
+    iva DECIMAL(5, 2) NOT NULL DEFAULT 19.00,
+    actualizado_fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);

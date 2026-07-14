@@ -2,6 +2,8 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { UserModel } from "../models/user.model.js";
 import { UserService } from "./user.service.js";
+import { sendMail } from "../config/mailer.js";
+
 
 export const AuthService = {
   /**
@@ -130,5 +132,78 @@ export const AuthService = {
       error.statusCode = 500;
       throw error;
     }
-  }
-};
+  },
+
+  /**
+   * Genera un token de reset y envía el correo de recuperación.
+   * @param {string} email - Correo del usuario.
+   */
+  forgotPassword: async (email) => {
+    const user = await UserModel.findByEmail(email);
+
+    // Validar que el correo esté registrado antes de intentar enviar el enlace
+    if (!user) {
+      const error = new Error("El correo ingresado no está registrado en el sistema.");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const resetToken = jwt.sign(
+      { id: user.id },
+      process.env.JWT_RESET_SECRET,
+      { expiresIn: process.env.JWT_RESET_EXPIRATION || '15m' }
+    );
+
+    const resetLink = `${process.env.FRONTEND_URL}/#/restablecer-contrasena?token=${resetToken}`;
+
+    await sendMail({
+      to: user.email,
+      subject: 'Recuperación de contraseña',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #333;">Recuperación de contraseña</h2>
+          <p>Hola <strong>${user.name}</strong>,</p>
+          <p>Recibimos una solicitud para restablecer tu contraseña. Haz clic en el siguiente botón:</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetLink}"
+               style="background-color: #6d28d9; color: white; padding: 12px 24px;
+                      text-decoration: none; border-radius: 8px; font-size: 16px;">
+              Restablecer contraseña
+            </a>
+          </div>
+          <p style="color: #888; font-size: 13px;">
+            Este enlace expira en <strong>15 minutos</strong>.<br>
+            Si no solicitaste esto, ignora este correo.
+          </p>
+        </div>
+      `,
+    });
+  },
+
+  /**
+   * Verifica el token de reset y actualiza la contraseña en la BD.
+   * @param {string} token - JWT de reset recibido del frontend.
+   * @param {string} newPassword - Nueva contraseña en texto plano.
+   */
+  resetPassword: async (token, newPassword) => {
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_RESET_SECRET);
+    } catch (err) {
+      const error = new Error('El enlace de recuperación es inválido o ha expirado.');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const user = await UserModel.findById(decoded.id);
+    if (!user) {
+      const error = new Error('Usuario no encontrado.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    await UserModel.updatePassword(user.id, hashedPassword);
+  },
+};

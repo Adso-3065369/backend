@@ -9,7 +9,8 @@ import {
   productRouter,
   userRouter,
   dashboardRouter,
-  clientRouter
+  clientRouter,
+  configRouter
 } from "./routes/index.js";
 
 // 1. Importamos nuestro manejador global
@@ -55,6 +56,7 @@ app.use("/api/users", userRouter);
 app.use("/api/dashboard", dashboardRouter);
 app.use("/api/clients", clientRouter);
 app.use("/api/sales", salesRouter);
+app.use("/api/config", configRouter);
 
 // 2. Conectamos el Middleware Global de Errores al final de todas las rutas
 app.use(globalErrorHandler);
