@@ -1,0 +1,24 @@
+se modifica el archivo markdown TABLE_STRUCTURE.md para solucionar el limite del valor en ventas.
+
+
+con ALTER TABLE MODIFY COLUMN en el script de la base de datos se puede modificar estas columnas.
+
+en la columna total que guarda el valor final de la factura. Al cambiar el tipo de dato "decimal" 10,2 a 14,2 dígitos totales, el límite entero 
+sube de 8 dígitos $99.999.999 a 12 dígitos $999.999.999.999 esto me permitirá recibir cifras altas.
+
+"tabla" sales 
+
+total DECIMAL(14, 2) NOT NULL DEFAULT 0.00;
+
+se modifica al igual las columnas unit_price y subtotal "decimal" de 10,2 a 14,2 garantiza la consistencia de los datos. Si una factura total supera los 100 millones, significa que los subtotales de los productos o los precios unitarios acumulados también pueden ser muy altos. Esto evita que el detalle de la venta falle al intentar guardar números grandes.
+
+"tabla" sale_details  
+
+unit_price DECIMAL(14, 2) NOT NULL;
+subtotal DECIMAL(14, 2) NOT NULL;
+
+se modifica la columna price Permite al módulo de inventario registrar productos individuales de alto valor.
+
+"tabla" products 
+
+ price DECIMAL(14, 2) NOT NULL DEFAULT 0.00;
