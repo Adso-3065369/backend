@@ -66,7 +66,7 @@ CREATE TABLE products (
     code VARCHAR(50) NOT NULL UNIQUE,
     name VARCHAR(150) NOT NULL,
     description TEXT,
-    price DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+    price DECIMAL(14, 2) NOT NULL DEFAULT 0.00,
     stock INT NOT NULL DEFAULT 0,
     category_id INT NOT NULL,
     is_active TINYINT(1) NOT NULL DEFAULT 1,
@@ -113,7 +113,7 @@ CREATE TABLE sales (
     id INT AUTO_INCREMENT PRIMARY KEY,
     client_id INT NOT NULL,
     user_id INT NOT NULL,
-    total DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+    total DECIMAL(14, 2) NOT NULL DEFAULT 0.00,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE RESTRICT,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT
@@ -124,9 +124,9 @@ CREATE TABLE sale_details (
     sale_id INT NOT NULL,
     product_id INT NULL, 
     product_name VARCHAR(150) NOT NULL,
-    unit_price DECIMAL(10, 2) NOT NULL,
+    unit_price DECIMAL(14, 2) NOT NULL,
     quantity INT NOT NULL DEFAULT 1,
-    subtotal DECIMAL(10, 2) NOT NULL,
+    subtotal DECIMAL(14, 2) NOT NULL,
     FOREIGN KEY (sale_id) REFERENCES sales(id) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
 );
