@@ -139,25 +139,15 @@ export const CategoryModel = {
 
     /**
      * @description Purga el registro de base de datos correspondiente a una categoría.
-     * Intercepta violaciones de integridad referencial para emitir errores de negocio.
+     * Nota: La validación de integridad referencial (productos vinculados) ya se
+     * resuelve en CategoryService.deleteCategory antes de invocar este método.
+     * Cualquier error aquí (incluida una eventual violación de FK por condición de
+     * carrera) se propaga tal cual hacia catchAsync -> globalErrorHandler.
      * @param {number} id - Llave primaria.
      * @returns {Promise<boolean>} Estado de la transacción.
      */
     delete: async (id) => {
-        try {
-            const [result] = await pool.query("DELETE FROM categories WHERE id = ?", [id]);
-            return result.affectedRows > 0;
-        } catch (error) {
-            // Evalúa si el fallo es por una restricción de llave foránea (FK)
-            if (error.code === 'ER_ROW_IS_REFERENCED_2' || error.errno === 1451) {
-                const businessError = new Error("No es posible eliminar la categoría porque tiene productos vinculados.");
-                businessError.statusCode = 409; // 409 Conflict
-                businessError.isOperational = true; // Marca para el manejador global de errores
-                throw businessError;
-            }
-            
-            // Si el error es de otra naturaleza (ej. desconexión del pool), relanza sin alterar
-            throw error;
-        }
+        const [result] = await pool.query("DELETE FROM categories WHERE id = ?", [id]);
+        return result.affectedRows > 0;
     }
 };
