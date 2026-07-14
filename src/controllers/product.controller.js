@@ -32,12 +32,12 @@ export const ProductController = {
             sortOrder: req.query.sortOrder      // ASC o DESC
         };
 
-        const result = await ProductService.getProducts(filters);        
-        
+        const result = await ProductService.getProducts(filters);
+
         return successResponse(
-            res, 
-            200, 
-            "Catálogo de productos recuperado exitosamente.", 
+            res,
+            200,
+            "Catálogo de productos recuperado exitosamente.",
             result
         );
     }),
@@ -84,7 +84,7 @@ export const ProductController = {
     update: catchAsync(async (req, res, next) => {
         const { id } = req.params;
         const productData = req.body;
-        
+
         const updatedProduct = await ProductService.updateProduct(id, productData);
 
         if (!updatedProduct) {
@@ -98,20 +98,20 @@ export const ProductController = {
 
 
     toggleStatus: catchAsync(async (req, res, next) => {
-    const { id } = req.params;
-    const { isActive } = req.body;
+        const { id } = req.params;
+        const { isActive } = req.body;
 
-    const updatedProduct = await ProductService.toggleProductStatus(id, isActive);
+        const updatedProduct = await ProductService.toggleProductStatus(id, isActive);
 
-    if (!updatedProduct) {
-        const error = new Error(`Producto con ID ${id} no encontrado.`);
-        error.statusCode = 404;
-        return next(error);
-    }
+        if (!updatedProduct) {
+            const error = new Error(`Producto con ID ${id} no encontrado.`);
+            error.statusCode = 404;
+            return next(error);
+        }
 
-    const action = isActive ? 'activado' : 'desactivado';
-    return successResponse(res, 200, `Producto ${action} exitosamente.`, updatedProduct);
-}),
+        const action = isActive ? 'activado' : 'desactivado';
+        return successResponse(res, 200, `Producto ${action} exitosamente.`, updatedProduct);
+    }),
 
     /**
      * @description Elimina físicamente un registro de producto.
