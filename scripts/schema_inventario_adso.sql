@@ -137,8 +137,8 @@ CREATE TABLE sale_details (
 -- =================================================================
 CREATE TABLE configurations (
     id INT PRIMARY KEY DEFAULT 1,
-    business_name VARCHAR(150) NOT NULL,
+    nombre_negocio VARCHAR(150) NOT NULL,
     nit VARCHAR(50) NOT NULL,
-    tax_rate DECIMAL(5, 2) NOT NULL DEFAULT 19.00,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    iva DECIMAL(5, 2) NOT NULL DEFAULT 19.00,
+    actualizado_fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );

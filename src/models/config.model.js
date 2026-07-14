@@ -16,7 +16,7 @@ export const ConfigModel = {
      */
     findById: async (id) => {
         const [rows] = await pool.query(
-            "SELECT id, business_name AS businessName, nit, tax_rate AS taxRate, updated_at AS updatedAt FROM configurations WHERE id = ?",
+            "SELECT id, nombre_negocio AS businessName, nit, iva AS taxRate, actualizado_fecha AS updatedAt FROM configurations WHERE id = ?",
             [id]
         );
         return rows.length > 0 ? rows[0] : undefined;
@@ -32,13 +32,13 @@ export const ConfigModel = {
         const { businessName, nit, taxRate } = data;
 
         await pool.query(
-            `INSERT INTO configurations (id, business_name, nit, tax_rate, updated_at)
+            `INSERT INTO configurations (id, nombre_negocio, nit, iva, actualizado_fecha)
              VALUES (?, ?, ?, ?, NOW())
              ON DUPLICATE KEY UPDATE
-                business_name = VALUES(business_name),
+                nombre_negocio = VALUES(nombre_negocio),
                 nit = VALUES(nit),
-                tax_rate = VALUES(tax_rate),
-                updated_at = NOW()`,
+                iva = VALUES(iva),
+                actualizado_fecha = NOW()`,
             [id, businessName, nit, taxRate]
         );
 
