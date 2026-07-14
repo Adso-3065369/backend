@@ -21,6 +21,7 @@ export const SaleController = {
         // Empaquetado estricto de parámetros de URL
         const filters = {
             search: req.query.search || null,
+            date: req.query.date || null, // Se agrega la siguiente linea para capturar la fecha 
             page: req.query.page,
             limit: req.query.limit,
             paginate: req.query.paginate,
