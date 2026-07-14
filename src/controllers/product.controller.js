@@ -95,6 +95,23 @@ export const ProductController = {
         return successResponse(res, 200, "Producto actualizado exitosamente.", updatedProduct);
     }),
 
+
+    toggleStatus: catchAsync(async (req, res, next) => {
+    const { id } = req.params;
+    const { isActive } = req.body;
+
+    const updatedProduct = await ProductService.toggleProductStatus(id, isActive);
+
+    if (!updatedProduct) {
+        const error = new Error(`Producto con ID ${id} no encontrado.`);
+        error.statusCode = 404;
+        return next(error);
+    }
+
+    const action = isActive ? 'activado' : 'desactivado';
+    return successResponse(res, 200, `Producto ${action} exitosamente.`, updatedProduct);
+}),
+
     /**
      * @description Elimina físicamente un registro de producto.
      * @param {Object} req - Objeto de petición (params: id).

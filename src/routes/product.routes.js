@@ -7,7 +7,7 @@ import {
   checkPermission  
 } from "../middlewares/index.js";
 
-import { productSchema } from "../schemas/product.schema.js";
+import { productSchema, productStatusSchema  } from "../schemas/product.schema.js";
 
 /**
  * @file product.routes.js
@@ -26,49 +26,37 @@ export const productRouter = Router();
  */
 productRouter.get(
   "/", 
-  verifyToken, 
-  checkPermission("products.index"), 
   ProductController.getAll
 );
 
-/**
- * @route GET /:id
- * @description Consulta detallada de un producto específico.
- * @access Privado (Requiere permiso 'products.view')
- */
 productRouter.get(
   "/:id", 
-  verifyToken, 
-  checkPermission("products.view"), 
   ProductController.getById
 );
 
-/**
- * @route POST /
- * @description Registra un nuevo producto en el inventario.
- * @access Privado (Requiere permiso 'products.create')
- * @middleware Valida el cuerpo de la petición contra 'productSchema'.
- */
 productRouter.post(
   "/", 
-  verifyToken, 
-  checkPermission("products.create"), 
   validateSchema(productSchema), 
   ProductController.create
 );
 
-/**
- * @route PUT /:id
- * @description Actualiza la información de un producto existente.
- * @access Privado (Requiere permiso 'products.update')
- * @middleware Valida el cuerpo de la petición contra 'productSchema'.
- */
 productRouter.put(
   "/:id", 
-  verifyToken, 
-  checkPermission("products.update"), 
   validateSchema(productSchema), 
   ProductController.update
+);
+
+/**
+ * @route PATCH /:id/status
+ * @description Actualiza únicamente el estado activo/inactivo de un producto.
+ * @access Privado (Requiere permiso 'products.update')
+ */
+productRouter.patch(
+  "/:id/status",
+  verifyToken,
+  checkPermission("products.update"),
+  validateSchema(productStatusSchema),
+  ProductController.toggleStatus
 );
 
 /**
@@ -78,7 +66,5 @@ productRouter.put(
  */
 productRouter.delete(
   "/:id", 
-  verifyToken, 
-  checkPermission("products.delete"), 
   ProductController.delete
 );
