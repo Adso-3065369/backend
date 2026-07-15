@@ -1,0 +1,30 @@
+
+
+PASO A PASO. Para corregir este error de limite de rango en la venta "Out of range value for column 'total' at row 1" es 
+el error que nos reflejo las herramientas de desarrollo del navegador en la pestaña network - preview.
+no se deben alterar las tablas al azar. Se debe seguir un orden lógico basado en el flujo del dinero dentro de la base de datos.
+
+para modificar las columnas se aplica el comando ALTER TABLE  junto con el nombre de la tabla.
+Luego MODIFY COLUMN junto con el nombre de la columna.
+
+posteriormente se define los valores en DECIMAL() de 10,2 a 14,2 esto nos aumenta la capacidad de facturacion
+de 8 digitos ejemplo "$99.999.999" sube a "$999.999.999.999".
+las columnas a ser NOT NULL DEFAULT 0.00 actúa como una validación que me generan en la factura cero por default evitando valores vacios
+y por consiguiente resolviendo este inconveniente.
+
+En la tabla sale_details se almacena un registro inmutable como un historial del precio y subtotal al momento de la venta. Si el sistema ahora 
+admite montos masivos, sus componentes individuales también deben hacerlo.
+
+ALTER TABLE sale_details MODIFY COLUMN unit_price DECIMAL(14, 2) NOT NULL;
+ALTER TABLE sale_details MODIFY COLUMN subtotal DECIMAL(14, 2) NOT NULL;
+
+Al Modificar estas columnas evita un error de inconsistencia. Si un cliente compra un único artículo de $100 Millones
+el total de la factura lo procesaría, pero el subtotal o el unit_price del detalle estallarían por decirlo de esta manera 
+si se mantuvieran en DECIMAL(10,2).
+
+Por último se debe asegurar que el módulo de inventarios sea capaz de suministrar artículos que igualen o superen el nuevo límite del sistema.
+
+ALTER TABLE products MODIFY COLUMN price DECIMAL(14, 2) NOT NULL DEFAULT 0.00;
+
+Permite que el administrador o el vendedor registre productos de gran valor supernado el monto de 100millones 
+sin provocar errores en el momento de facturar y en el sistema al momento de listar el catálogo.
