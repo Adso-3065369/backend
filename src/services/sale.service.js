@@ -36,11 +36,18 @@ export class SaleService {
             for (const item of details) {
                 const product = await ProductModel.findByIdForTransaction(item.product_id, connection);
                 
-                if (!product) throw new Error(`El producto con ID ${item.product_id} no existe.`);
-                if (product.stock < item.quantity) {
-                    throw new Error(`Stock insuficiente para "${product.name}". Disponible: ${product.stock}`);
+                // 1. Validación de existencia
+                if (!product) {
+                    const err = new Error(`El producto con ID ${item.product_id} no existe.`);
+                    err.statusCode = 404; // Not Found
+                    throw err;
                 }
-
+                // 2. Validación de reglas de negocio (Stock)
+                if (product.stock < item.quantity) {
+                    const err = new Error(`Stock insuficiente para "${product.name}". Disponible: ${product.stock}`);
+                    err.statusCode = 422; // Unprocessable Entity
+                    throw err;
+                }
                 const subtotal = item.quantity * product.price;
                 saleTotal += subtotal;
 

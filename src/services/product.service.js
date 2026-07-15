@@ -91,6 +91,10 @@ export const ProductService = {
     return await ProductModel.update(id, productData);
   },
 
+  toggleProductStatus: async (id, isActive) => {
+    return await ProductModel.toggleStatus(id, isActive);
+},
+
   /**
    * @description Elimina un producto del catálogo de forma permanente.
    * @param {number} id - ID del producto a eliminar.

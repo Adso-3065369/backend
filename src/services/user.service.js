@@ -31,28 +31,38 @@ export const UserService = {
 
     /**
      * @description Coordina la extracción paginada o plana del directorio de usuarios.
-     * @param {Object} filters - Diccionario de parámetros de control.
+     * @param {Object} filters - Diccionario de parámetros de control (Tratado como Inmutable).
      * @returns {Promise<Object|Array>} Estructura paginada o arreglo plano.
      */
     getAllUsers: async (filters = {}) => {
+        // 1. Ruta plana: Pasamos el objeto original sin tocarlo
         if (String(filters.paginate) === 'false') {
             return await UserModel.findAllDynamic(filters);
         }
 
+        // 2. Cálculos matemáticos aislados
         const limit = Number(filters.limit) || 10;
         const page = Number(filters.page) || 1;
         const offset = (page - 1) * limit;
 
-        filters.limit = limit;
-        filters.offset = offset;
+        // 3. SOLUCIÓN ARQUITECTÓNICA: Clonación Defensiva
+        // Creamos un NUEVO objeto que hereda los filtros originales (ej. search, role)
+        // y le inyectamos/sobrescribimos las variables de paginación estrictas.
+        const dbQueryParams = {
+            ...filters, 
+            limit,
+            offset
+        };
 
+        // 4. Ejecución concurrente usando el nuevo objeto sanitizado
         const [totalItems, users] = await Promise.all([
-            UserModel.countDynamic(filters),
-            UserModel.findAllDynamic(filters)
+            UserModel.countDynamic(dbQueryParams),
+            UserModel.findAllDynamic(dbQueryParams)
         ]);
 
         const totalPages = Math.ceil(totalItems / limit);
 
+        // 5. Retorno estructurado
         return {
             data: users,
             meta: {
@@ -99,11 +109,51 @@ export const UserService = {
     // ESCRITURA Y MUTACIONES
     // ============================================================================
 
+    /**
+     * @description Persiste un nuevo usuario en la base de datos previa verificación de unicidad del email.
+     * Esto evita que se introduzcan registros duplicados que causarían excepciones inesperadas del motor de BD.
+     * 
+     * @param {Object} userData - Estructura de datos del nuevo usuario.
+     * @param {string} userData.name - Nombre completo del usuario.
+     * @param {string} userData.email - Dirección de correo electrónico única.
+     * @param {string} userData.password - Hash de contraseña.
+     * @returns {Promise<Object>} Datos del usuario registrado y sanitizado.
+     * @throws {Error} Si el correo electrónico ya existe registrado en el sistema (statusCode 400).
+     */
     createUser: async (userData) => {
+        // Guarda de unicidad: evita registrar un correo ya existente
+        const existingUser = await UserModel.findByEmail(userData.email);
+        if (existingUser) {
+            const error = new Error("Error de validación en los datos enviados");
+            error.statusCode = 400;
+            error.errors = [{ field: "email", message: "Este correo ya se encuentra registrado en el sistema." }];
+            throw error;
+        }
         return await UserModel.create(userData);
     },
 
+    /**
+     * @description Actualiza los datos básicos de un usuario existente previa validación de unicidad del email.
+     * La lógica permite que el usuario mantenga su correo actual sin lanzar error, pero bloquea la operación 
+     * si intenta usar un correo que pertenezca a otra cuenta registrada.
+     * 
+     * @param {number|string} id - ID del usuario a modificar.
+     * @param {Object} userData - Datos a actualizar.
+     * @param {string} userData.name - Nombre actualizado.
+     * @param {string} userData.email - Correo actualizado.
+     * @returns {Promise<Object|null>} Datos del usuario modificado, o null si no se encuentra.
+     * @throws {Error} Si el nuevo correo ya pertenece a otro usuario registrado (statusCode 400).
+     */
     updateUser: async (id, userData) => {
+        // Guarda de unicidad: permite que el usuario conserve su propio correo,
+        // pero bloquea si el correo ya pertenece a OTRA cuenta distinta.
+        const existingUser = await UserModel.findByEmail(userData.email);
+        if (existingUser && String(existingUser.id) !== String(id)) {
+            const error = new Error("Error de validación en los datos enviados");
+            error.statusCode = 400;
+            error.errors = [{ field: "email", message: "Este correo ya está en uso por otra cuenta del sistema." }];
+            throw error;
+        }
         return await UserModel.update(id, userData);
     },
 

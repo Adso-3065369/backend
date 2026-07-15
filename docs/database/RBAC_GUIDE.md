@@ -40,6 +40,9 @@ Esta matriz define los permisos granulares asignados por cada rol. El middleware
 | | Asignar | `roles.assign` | ✅ | ❌ | ❌ |
 | **Permisos** | Listar | `permissions.index` | ✅ | ❌ | ❌ |
 | | Asignar | `permissions.assign` | ✅ | ❌ | ❌ |
+| **Configuracion** | Ver | `config.index` | ✅ | ❌ | ❌ |
+| | Editar | `config.update` | ✅ | ❌ | ❌ |
+
 
 > **Nota de Seguridad:** Cualquier intento de acceso sin el permiso correspondiente resultará en una respuesta `403 Forbidden`. El rol **Admin** tiene acceso irrestricto, mientras que el rol **Auditor** está estrictamente limitado a lecturas.
 
@@ -81,4 +84,6 @@ INSERT IGNORE INTO permissions (name, slug, description, created_at, updated_at)
 ('Crear Ventas', 'sales.create', 'Registro de ventas', NOW(), NOW()),
 ('Actualizar Ventas', 'sales.update', 'Edición de ventas', NOW(), NOW()),
 ('Eliminar Ventas', 'sales.delete', 'Anulación de ventas', NOW(), NOW());
+('Configuración', 'config.index', 'Permite Ingresar a la vista de configuracion del sistema', NOW(), NOW()),
+('Actualizar Configuración', 'config.update', 'Permite cambiar IVA y datos del negocio', NOW(),NOW());
 ```

@@ -139,6 +139,10 @@ export const CategoryModel = {
 
     /**
      * @description Purga el registro de base de datos correspondiente a una categoría.
+     * Nota: La validación de integridad referencial (productos vinculados) ya se
+     * resuelve en CategoryService.deleteCategory antes de invocar este método.
+     * Cualquier error aquí (incluida una eventual violación de FK por condición de
+     * carrera) se propaga tal cual hacia catchAsync -> globalErrorHandler.
      * @param {number} id - Llave primaria.
      * @returns {Promise<boolean>} Estado de la transacción.
      */

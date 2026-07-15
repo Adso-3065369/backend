@@ -8,6 +8,40 @@ import pool from "../config/db.js";
  * - Seguridad: Utiliza sentencias preparadas para prevenir ataques de Inyección SQL.
  * - Modulabilidad: Separa la lógica de persistencia de la lógica de negocio.
  */
+/**
+ * @description Helper para construir cláusulas WHERE dinámicas y sus parámetros.
+ * @param {Object} filters - Objeto con los filtros aplicados.
+ * @returns {Object} Contiene { whereClause, params }
+ */
+const buildDynamicFilters = (filters) => {
+    let whereClause = '';
+    const params = [];
+
+    if (filters.is_active !== undefined) {
+        whereClause += ` AND p.is_active = ?`;
+        params.push(Number(filters.is_active));
+    }
+
+    if (filters.category_id) {
+        whereClause += ` AND p.category_id = ?`;
+        params.push(Number(filters.category_id));
+    }
+
+    if (filters.search) {
+        whereClause += ` AND (p.name LIKE ? OR p.code LIKE ?)`;
+        const likeTerm = `%${filters.search}%`;
+        params.push(likeTerm, likeTerm);
+    }
+
+    if (filters.name) {
+        whereClause += ` AND p.name LIKE ?`;
+        const likeName = `%${filters.name}%`;
+        params.push(likeName);
+    }
+
+    return { whereClause, params };
+};
+
 export const ProductModel = { 
 
   /**
@@ -17,22 +51,13 @@ export const ProductModel = {
    */
   countDynamic: async (filters = {}) => {
       let query = `SELECT COUNT(p.id) as total FROM products p WHERE 1=1`;
-      const params = [];
+      const { whereClause, params } = buildDynamicFilters(filters);
+      query += whereClause;
 
-      if (filters.is_active !== undefined) {
-          query += ` AND p.is_active = ?`;
-          params.push(Number(filters.is_active));
-      }
-
-      if (filters.category_id) {
-          query += ` AND p.category_id = ?`;
-          params.push(Number(filters.category_id));
-      }
-
-      if (filters.search) {
-          query += ` AND (p.name LIKE ? OR p.code LIKE ?)`;
-          const likeTerm = `%${filters.search}%`;
-          params.push(likeTerm, likeTerm);
+      if (filters.name) {
+          query += ` AND p.name LIKE ?`;
+          const likeName = `%${filters.name}%`;
+          params.push(likeName);
       }
 
       const [rows] = await pool.query(query, params);
@@ -48,27 +73,19 @@ export const ProductModel = {
       let query = `
           SELECT 
               p.*, 
+              p.is_active as isActive,
               c.name as category 
           FROM products p
           LEFT JOIN categories c ON p.category_id = c.id
           WHERE 1=1
       `;
-      const params = [];
+      const { whereClause, params } = buildDynamicFilters(filters);
+      query += whereClause;
 
-      if (filters.is_active !== undefined) {
-          query += ` AND p.is_active = ?`;
-          params.push(Number(filters.is_active));
-      }
-
-      if (filters.category_id) {
-          query += ` AND p.category_id = ?`;
-          params.push(Number(filters.category_id));
-      }
-
-      if (filters.search) {
-          query += ` AND (p.name LIKE ? OR p.code LIKE ?)`;
-          const likeTerm = `%${filters.search}%`; 
-          params.push(likeTerm, likeTerm);
+      if (filters.name) {
+          query += ` AND p.name LIKE ?`;
+          const likeName = `%${filters.name}%`;
+          params.push(likeName);
       }
 
       const allowedSortColumns = ['id', 'name', 'price', 'stock', 'code', 'created_at'];
@@ -167,14 +184,48 @@ export const ProductModel = {
     return updatedProduct[0];
   },
 
-  /**
-   * @description Ejecuta una eliminación permanente de un producto por ID.
-   * @param {number} id - Identificador del producto.
-   * @returns {Promise<boolean>} True si la eliminación fue exitosa, false de lo contrario.
-   */
-  delete: async (id) => {
+  ///////////////////
+  toggleStatus: async (id, isActive) => {
+    const [result] = await pool.query(
+        "UPDATE products SET is_active = ? WHERE id = ?",
+        [isActive ? 1 : 0, id]
+    );
+
+    if (result.affectedRows === 0) return null;
+
+    const [updatedProduct] = await pool.query(
+        "SELECT *, is_active as isActive FROM products WHERE id = ?", [id]
+    );
+    return updatedProduct[0];
+},
+
+
+/**
+ * @description Ejecuta una eliminación permanente de un producto por ID.
+ * @param {number} id - Identificador del producto.
+ * @returns {Promise<boolean>} True si la eliminación fue exitosa, false de lo contrario.
+*/
+delete: async (id) => {
+      
+          const [sales] = await pool.query(
+              `
+              SELECT COUNT(*) AS total
+              FROM sale_details
+              WHERE product_id = ?
+              `,
+              [id]
+          );
+      
+          if (sales[0].total > 0) {
+          return {
+              hasSales: true
+          };
+      }
     const [result] = await pool.query("DELETE FROM products WHERE id = ?", [id]);
-    return result.affectedRows > 0;
+    return {
+        hasSales: false,
+        deleted: result.affectedRows > 0
+    };
   },
 
   /**

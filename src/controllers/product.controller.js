@@ -21,7 +21,8 @@ export const ProductController = {
     getAll: catchAsync(async (req, res) => {
         // Empaquetado estricto de parámetros de URL (Dynamic Query String)
         const filters = {
-            search: req.query.search || null,
+            search: req.query.search || null,   // Búsqueda general (nombre o código)
+            name: req.query.name || null,       // Búsqueda estricta por nombre
             page: req.query.page,
             limit: req.query.limit,
             is_active: req.query.is_active,     // Filtro de estado
@@ -31,12 +32,12 @@ export const ProductController = {
             sortOrder: req.query.sortOrder      // ASC o DESC
         };
 
-        const result = await ProductService.getProducts(filters);        
-        
+        const result = await ProductService.getProducts(filters);
+
         return successResponse(
-            res, 
-            200, 
-            "Catálogo de productos recuperado exitosamente.", 
+            res,
+            200,
+            "Catálogo de productos recuperado exitosamente.",
             result
         );
     }),
@@ -83,7 +84,7 @@ export const ProductController = {
     update: catchAsync(async (req, res, next) => {
         const { id } = req.params;
         const productData = req.body;
-        
+
         const updatedProduct = await ProductService.updateProduct(id, productData);
 
         if (!updatedProduct) {
@@ -95,6 +96,23 @@ export const ProductController = {
         return successResponse(res, 200, "Producto actualizado exitosamente.", updatedProduct);
     }),
 
+
+    toggleStatus: catchAsync(async (req, res, next) => {
+        const { id } = req.params;
+        const { isActive } = req.body;
+
+        const updatedProduct = await ProductService.toggleProductStatus(id, isActive);
+
+        if (!updatedProduct) {
+            const error = new Error(`Producto con ID ${id} no encontrado.`);
+            error.statusCode = 404;
+            return next(error);
+        }
+
+        const action = isActive ? 'activado' : 'desactivado';
+        return successResponse(res, 200, `Producto ${action} exitosamente.`, updatedProduct);
+    }),
+
     /**
      * @description Elimina físicamente un registro de producto.
      * @param {Object} req - Objeto de petición (params: id).
@@ -104,14 +122,22 @@ export const ProductController = {
      */
     delete: catchAsync(async (req, res, next) => {
         const { id } = req.params;
-        const isDeleted = await ProductService.deleteProduct(id);
+        const result = await ProductService.deleteProduct(id);
 
-        if (!isDeleted) {
-            const error = new Error(`No se pudo eliminar. El producto con ID ${id} no fue encontrado.`);
+        //el producto tiene ventas asociadas
+        if (!result.hasSales) {
+            const error = new Error(`No se pudo eliminar. El producto porque tiene ventas asociadas`);
             error.statusCode = 404;
             return next(error);
         }
 
+        //el producto no existe
+        if(!result.deleted) {
+            const error = new Error(`no se pudo eliminar, el producto con id ${id} no fue encontrado,`);
+            error.statusCode = 404;
+            return next(error);
+        }
+        //eliminacion exitosa    
         return successResponse(res, 200, "Producto eliminado correctamente del sistema.");
     })
 };

@@ -50,7 +50,7 @@ export const SaleModel = {
 
     /**
      * @description Realiza un conteo dinámico de ventas, evaluando condiciones de búsqueda aplicadas a tablas relacionales.
-     * @param {Object} [filters={}] - Diccionario de parámetros de filtrado (soporta 'search' para id de venta, nombre de cliente o documento).
+     * @param {Object} [filters={}] - Diccionario de parámetros de filtrado (soporta 'search' para id de venta, nombre de cliente, vendedor o documento, y 'date' para fecha exacta).
      * @returns {Promise<number>} Cantidad absoluta de registros que coinciden con la heurística de búsqueda.
      */
     countDynamic: async (filters = {}) => {
@@ -58,14 +58,23 @@ export const SaleModel = {
             SELECT COUNT(s.id) as total 
             FROM sales s
             INNER JOIN clients c ON s.client_id = c.id
+            INNER JOIN users u ON s.user_id = u.id
             WHERE 1=1
         `;
         const params = [];
 
+        // 1. Filtro Global (Código, Cliente, Vendedor, Documento)
         if (filters.search) {
-            query += ` AND (c.name LIKE ? OR c.document_number LIKE ? OR s.id = ?)`;
+            query += ` AND (c.name LIKE ? OR c.document_number LIKE ? OR u.name LIKE ? OR s.id = ?)`;
             const likeTerm = `%${filters.search}%`;
-            params.push(likeTerm, likeTerm, filters.search);
+            // Pasamos el término 3 veces para los LIKE (cliente, documento, vendedor) y la coincidencia exacta (id)
+            params.push(likeTerm, likeTerm, likeTerm, filters.search);
+        }
+
+        // 2. Filtro de Fecha Exacta
+        if (filters.date) {
+            query += ` AND DATE(s.created_at) = DATE(?)`;
+            params.push(filters.date);
         }
 
         const [rows] = await pool.query(query, params);
@@ -75,7 +84,7 @@ export const SaleModel = {
     /**
      * @description Extrae el listado de ventas inyectando cláusulas dinámicas de paginación, ordenamiento y filtrado.
      * Construye objetos JSON nativos para las entidades Client y User directamente desde SQL.
-     * @param {Object} [filters={}] - Parámetros de control: search, limit, offset, sortBy, sortOrder, paginate.
+     * @param {Object} [filters={}] - Parámetros de control: search, date, limit, offset, sortBy, sortOrder, paginate.
      * @returns {Promise<Array<Object>>} Colección de objetos de venta con metadatos relacionales incrustados.
      */
     findAllDynamic: async (filters = {}) => {
@@ -91,10 +100,18 @@ export const SaleModel = {
         `;
         const params = [];
 
+        // 1. Filtro Global (Código, Cliente, Vendedor, )
         if (filters.search) {
-            query += ` AND (c.name LIKE ? OR c.document_number LIKE ? OR s.id = ?)`;
+            query += ` AND (c.name LIKE ? OR u.name LIKE ? OR s.id = ?)`;
             const likeTerm = `%${filters.search}%`;
+            // 3 LIKES y 1 EXACT MATCH (Igual que en el countDynamic)
             params.push(likeTerm, likeTerm, filters.search);
+        }
+
+        // 2. Filtro de Fecha Exacta
+        if (filters.date) {
+            query += ` AND DATE(s.created_at) = DATE(?)`;
+            params.push(filters.date);
         }
 
         const allowedSortColumns = ['id', 'total', 'created_at'];
@@ -111,7 +128,8 @@ export const SaleModel = {
             params.push(Number(filters.limit));
         }
 
-        const [rows] = await pool.query(query, params);
+        const [rows] = await pool.query(query, params);     
+        
         return rows;
     },
 
@@ -177,10 +195,11 @@ export const SaleModel = {
     },
 
     /**
-     * @description Determina las áreas de mayor volumen de salida calculando el top 5 de categorías basándose en las unidades transadas.
-     * @returns {Promise<Array<Object>>} Arreglo descendente que asocia 'category_name' con el volumen 'sales_count'.
+     * @description Determina las áreas de mayor volumen de salida calculando el top de categorías.
+     * @param {number} [limit=5] - Cantidad máxima de categorías a retornar.
+     * @returns {Promise<Array<Object>>} Arreglo descendente (category_name, sales_count).
      */
-    getTopCategories: async () => {
+    getTopCategories: async (limit = 5) => {
         const query = `
             SELECT c.name as category_name, SUM(sd.quantity) as sales_count 
             FROM sale_details sd
@@ -188,9 +207,10 @@ export const SaleModel = {
             JOIN categories c ON p.category_id = c.id
             GROUP BY c.id, c.name
             ORDER BY sales_count DESC
-            LIMIT 5
+            LIMIT ?
         `;
-        const [rows] = await pool.query(query);
+        // Inyecta el límite dinámicamente evitando inyección SQL
+        const [rows] = await pool.query(query, [Number(limit)]);
         return rows;
     }
 };
