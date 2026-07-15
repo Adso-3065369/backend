@@ -199,14 +199,33 @@ export const ProductModel = {
     return updatedProduct[0];
 },
 
-  /**
-   * @description Ejecuta una eliminación permanente de un producto por ID.
-   * @param {number} id - Identificador del producto.
-   * @returns {Promise<boolean>} True si la eliminación fue exitosa, false de lo contrario.
-   */
-  delete: async (id) => {
+
+/**
+ * @description Ejecuta una eliminación permanente de un producto por ID.
+ * @param {number} id - Identificador del producto.
+ * @returns {Promise<boolean>} True si la eliminación fue exitosa, false de lo contrario.
+*/
+delete: async (id) => {
+      
+          const [sales] = await pool.query(
+              `
+              SELECT COUNT(*) AS total
+              FROM sale_details
+              WHERE product_id = ?
+              `,
+              [id]
+          );
+      
+          if (sales[0].total > 0) {
+          return {
+              hasSales: true
+          };
+      }
     const [result] = await pool.query("DELETE FROM products WHERE id = ?", [id]);
-    return result.affectedRows > 0;
+    return {
+        hasSales: false,
+        deleted: result.affectedRows > 0
+    };
   },
 
   /**

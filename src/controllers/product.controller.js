@@ -122,14 +122,22 @@ export const ProductController = {
      */
     delete: catchAsync(async (req, res, next) => {
         const { id } = req.params;
-        const isDeleted = await ProductService.deleteProduct(id);
+        const result = await ProductService.deleteProduct(id);
 
-        if (!isDeleted) {
-            const error = new Error(`No se pudo eliminar. El producto con ID ${id} no fue encontrado.`);
+        //el producto tiene ventas asociadas
+        if (!result.hasSales) {
+            const error = new Error(`No se pudo eliminar. El producto porque tiene ventas asociadas`);
             error.statusCode = 404;
             return next(error);
         }
 
+        //el producto no existe
+        if(!result.deleted) {
+            const error = new Error(`no se pudo eliminar, el producto con id ${id} no fue encontrado,`);
+            error.statusCode = 404;
+            return next(error);
+        }
+        //eliminacion exitosa    
         return successResponse(res, 200, "Producto eliminado correctamente del sistema.");
     })
 };
